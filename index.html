@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>커머스실 조직 구성안 비교</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+
+  :root {
+    --bg-primary: #0a0f1a;
+    --bg-secondary: #111827;
+    --bg-card: #1a2236;
+    --bg-card-hover: #1e2940;
+    --accent: #22c55e;
+    --accent-dim: rgba(34,197,94,0.15);
+    --accent-glow: rgba(34,197,94,0.3);
+    --warn: #f59e0b;
+    --warn-dim: rgba(245,158,11,0.15);
+    --danger: #ef4444;
+    --danger-dim: rgba(239,68,68,0.15);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.15);
+    --purple: #a855f7;
+    --purple-dim: rgba(168,85,247,0.15);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6,182,212,0.15);
+    --orange: #f97316;
+    --orange-dim: rgba(249,115,22,0.15);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: rgba(255,255,255,0.08);
+    --border-accent: rgba(34,197,94,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  #particles {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,15,26,0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+  }
+  .nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .nav-logo { font-weight: 700; font-size: 1rem; color: var(--accent); }
+  .nav-links { display: flex; gap: 0.2rem; }
+  .nav-links a {
+    color: var(--text-secondary); text-decoration: none; font-size: 0.8rem;
+    padding: 0.4rem 0.7rem; border-radius: 6px; transition: all .2s;
+    white-space: nowrap;
+  }
+  .nav-links a:hover, .nav-links a.active {
+    color: var(--accent); background: var(--accent-dim);
+  }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    position: relative; text-align: center; padding: 2rem;
+  }
+  .hero::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 200px;
+    background: linear-gradient(transparent, var(--bg-primary));
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-badge {
+    display: inline-block; padding: 0.4rem 1rem; border-radius: 50px;
+    background: var(--accent-dim); border: 1px solid var(--border-accent);
+    color: var(--accent); font-size: 0.8rem; font-weight: 500;
+    margin-bottom: 1.5rem; letter-spacing: 0.05em;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900;
+    line-height: 1.2; margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 1.05rem; color: var(--text-secondary);
+    max-width: 600px; margin: 0 auto 2rem;
+  }
+  .scroll-hint {
+    position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%);
+    z-index: 2; animation: bounce 2s infinite;
+  }
+  .scroll-hint span {
+    display: block; width: 24px; height: 24px; border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent); transform: rotate(45deg); opacity: 0.5;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(10px); }
+  }
+
+  /* ── Sections ── */
+  section {
+    position: relative; z-index: 1;
+    max-width: 1200px; margin: 0 auto; padding: 5rem 2rem;
+  }
+  .section-label {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 0.5rem;
+  }
+  .section-title {
+    font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; margin-bottom: 0.5rem;
+  }
+  .section-desc {
+    color: var(--text-secondary); font-size: 0.95rem; max-width: 700px; margin-bottom: 2.5rem;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.8rem; margin-bottom: 1.5rem;
+    transition: all .3s;
+  }
+  .card:hover {
+    background: var(--bg-card-hover); border-color: var(--border-accent);
+    transform: translateY(-2px); box-shadow: 0 8px 30px rgba(34,197,94,0.08);
+  }
+  .card-title {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+
+  /* ── Tags ── */
+  .tag {
+    display: inline-block; padding: 0.15rem 0.6rem; border-radius: 50px;
+    font-size: 0.7rem; font-weight: 600;
+  }
+  .tag-green { background: var(--accent-dim); color: var(--accent); }
+  .tag-yellow { background: var(--warn-dim); color: var(--warn); }
+  .tag-red { background: var(--danger-dim); color: var(--danger); }
+  .tag-blue { background: var(--blue-dim); color: var(--blue); }
+  .tag-purple { background: var(--purple-dim); color: var(--purple); }
+  .tag-orange { background: var(--orange-dim); color: var(--orange); }
+  .tag-cyan { background: var(--cyan-dim); color: var(--cyan); }
+
+  /* ── Org Chart ── */
+  .org-chart {
+    padding: 1.5rem; font-size: 0.85rem;
+  }
+  .org-level {
+    display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0.3rem;
+  }
+  .org-indent { padding-left: 1.5rem; border-left: 2px solid var(--border); margin-left: 0.5rem; }
+  .org-indent-2 { padding-left: 1.5rem; border-left: 2px solid rgba(255,255,255,0.04); margin-left: 0.5rem; }
+  .org-node {
+    padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 0.4rem;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-weight: 500;
+  }
+  .org-node.lead { background: var(--accent-dim); border: 1px solid var(--border-accent); }
+  .org-node.squad-a { background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.3); }
+  .org-node.squad-b { background: var(--orange-dim); border: 1px solid rgba(249,115,22,0.3); }
+  .org-node.squad-c { background: var(--purple-dim); border: 1px solid rgba(168,85,247,0.3); }
+  .org-node.squad-d { background: var(--cyan-dim); border: 1px solid rgba(6,182,212,0.3); }
+  .org-node.new-hire { background: var(--warn-dim); border: 1px solid rgba(245,158,11,0.3); }
+  .org-role { font-size: 0.7rem; color: var(--text-muted); }
+
+  /* ── Compare Table ── */
+  .compare-grid {
+    display: grid; grid-template-columns: 180px 1fr 1fr;
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    font-size: 0.85rem;
+  }
+  .compare-grid .cell {
+    padding: 0.9rem 1rem; border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .compare-grid .cell:last-child { border-right: none; }
+  .compare-grid .header {
+    background: rgba(255,255,255,0.05); font-weight: 700;
+    font-size: 0.85rem; text-align: center;
+  }
+  .compare-grid .row-label {
+    background: rgba(255,255,255,0.02); font-weight: 600;
+    color: var(--text-secondary); font-size: 0.8rem;
+  }
+  .compare-grid .best {
+    background: var(--accent-dim);
+  }
+  .compare-grid .cell strong { color: var(--text-primary); }
+
+  /* ── Person Card ── */
+  .person-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem; transition: all .3s;
+  }
+  .person-card:hover { border-color: var(--border-accent); }
+  .person-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .person-role { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.6rem; }
+  .person-tasks { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8; }
+
+  /* ── Toggle Switch ── */
+  .toggle-wrap {
+    display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;
+  }
+  .toggle-btn {
+    padding: 0.8rem 2rem; border-radius: 12px; border: 2px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all .3s; font-family: 'Noto Sans KR', sans-serif;
+    min-width: 200px;
+  }
+  .toggle-btn:hover { border-color: var(--border-accent); color: var(--text-primary); }
+  .toggle-btn.active-a {
+    background: var(--blue-dim); border-color: var(--blue); color: var(--blue);
+  }
+  .toggle-btn.active-b {
+    background: var(--orange-dim); border-color: var(--orange); color: var(--orange);
+  }
+  .option-panel { display: none; animation: fadeSlide .4s ease; }
+  .option-panel.active { display: block; }
+
+  @keyframes glowPulse {
+    0%,100% { box-shadow: 0 0 8px rgba(249,115,22,0.5); }
+    50% { box-shadow: 0 0 16px rgba(249,115,22,0.8), 0 0 24px rgba(249,115,22,0.3); }
+  }
+  .new-badge {
+    background: var(--orange); color: #fff; padding: 0.1rem 0.5rem; border-radius: 4px;
+    font-weight: 700; font-size: 0.65rem; letter-spacing: 0.05em;
+    box-shadow: 0 0 8px rgba(249,115,22,0.5); animation: glowPulse 2s infinite;
+    margin-left: 0.3rem;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Stacked Bar ── */
+  .stacked-bar {
+    height: 32px; border-radius: 8px; overflow: hidden; display: flex;
+    background: rgba(255,255,255,0.03);
+  }
+  .stacked-seg {
+    height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 600; transition: width 1.5s ease;
+    min-width: 0; overflow: hidden;
+  }
+
+  /* ── Key Diff Highlight ── */
+  .diff-highlight {
+    background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(59,130,246,0.08));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .diff-title {
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--warn); margin-bottom: 0.8rem;
+  }
+  .diff-row {
+    display: grid; grid-template-columns: 80px 1fr 50px 1fr;
+    align-items: center; gap: 0.5rem; margin-bottom: 0.6rem;
+    font-size: 0.85rem;
+  }
+  .diff-label { font-weight: 600; color: var(--text-secondary); }
+  .diff-arrow { text-align: center; color: var(--text-muted); }
+  .diff-val-a { color: var(--blue); font-weight: 600; }
+  .diff-val-b { color: var(--orange); font-weight: 600; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center; padding: 3rem 2rem;
+    color: var(--text-muted); font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    max-width: 1200px; margin: 0 auto;
+  }
+
+  /* ── Scroll Animations ── */
+  .fade-in {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .compare-grid { grid-template-columns: 120px 1fr 1fr; font-size: 0.75rem; }
+    .compare-grid .cell { padding: 0.6rem; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .toggle-btn { min-width: 140px; font-size: 0.85rem; padding: 0.6rem 1rem; }
+    .diff-row { grid-template-columns: 60px 1fr 30px 1fr; font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">Commerce Squad Options</div>
+    <div class="nav-links">
+      <a href="#context">배경</a>
+      <a href="#options">두 가지 안</a>
+      <a href="#people">개인별 변화</a>
+      <a href="#compare">비교</a>
+      <a href="#discuss">논의 포인트</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">DISCUSSION MATERIAL</div>
+    <h1>커머스실 조직 구성<br>두 가지 방향</h1>
+    <p>스쿼드/프로젝트 단위 vs 채널별 체제 + 역할 강화<br>각 안의 트레이드오프를 비교하여 논의합니다</p>
+    <div style="display:flex;gap:1.5rem;justify-content:center;margin-top:2.5rem;">
+      <div style="text-align:center;padding:1.2rem 2rem;background:var(--blue-dim);border:1px solid rgba(59,130,246,0.3);border-radius:12px;">
+        <div style="font-size:0.75rem;color:var(--blue);font-weight:600;margin-bottom:0.3rem;">A안</div>
+        <div style="font-size:1.1rem;font-weight:800;">스쿼드 체제</div>
+      </div>
+      <div style="display:flex;align-items:center;color:var(--text-muted);font-size:1.5rem;">vs</div>
+      <div style="text-align:center;padding:1.2rem 2rem;background:var(--orange-dim);border:1px solid rgba(249,115,22,0.3);border-radius:12px;">
+        <div style="font-size:0.75rem;color:var(--orange);font-weight:600;margin-bottom:0.3rem;">B안</div>
+        <div style="font-size:1.1rem;font-weight:800;">채널별 체제</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint"><span></span></div>
+</div>
+
+<!-- Context -->
+<section id="context">
+  <div class="fade-in">
+    <div class="section-label">BACKGROUND</div>
+    <div class="section-title">논의 배경</div>
+    <div class="section-desc">9월 17일 실적 논의에서 제기된 조직 개편 방향과 현재 팀 상황을 정리합니다.</div>
+  </div>
+
+  <div class="fade-in">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">핵심 키워드</div>
+        <div style="font-size:0.9rem;color:var(--text-secondary);line-height:2.2;">
+          <div>"한 사람이 <strong style="color:var(--accent);">한 가지에 깊게</strong> 집중"</div>
+          <div>"넓이는 리더가, <strong style="color:var(--accent);">깊이는 담당자</strong>가"</div>
+          <div>"스쿼드 체계로 <strong style="color:var(--accent);">영역별 책임자</strong>를 명확히"</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">현재 상황</div>
+        <div style="font-size:0.9rem;color:var(--text-secondary);line-height:2.2;">
+          <div>온라인: 파트장 1명, 자사몰 2명, 입점몰 2명</div>
+          <div>오프라인: 2명 / 매장직 62명</div>
+          <div>오프라인 <strong>21개 매장</strong>, 2명이 운영 — <strong style="color:var(--warn);">인력 부족</strong></div>
+          <div>하반기 신규 출점 2개 + 2027 이전 2개(기흥, 광명) + 폐점(동래) 외 검토</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-in" style="margin-top:1.5rem;">
+    <div class="card">
+      <div class="card-title">공통 전제 (두 안 모두 동일)</div>
+      <div class="grid-3" style="margin-top:0.5rem;">
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+          <div style="font-weight:600;color:var(--text-primary);margin-bottom:0.3rem;">해외</div>
+          <div>김혜리 단독 운영 (변동 없음)</div>
+        </div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+          <div style="font-weight:600;color:var(--text-primary);margin-bottom:0.3rem;">김가영 파트장</div>
+          <div>자사몰+외부몰 총괄 + 사방넷 연동 프로젝트</div>
+        </div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+          <div style="font-weight:600;color:var(--text-primary);margin-bottom:0.3rem;">충원</div>
+          <div>1명 필요 (역할이 다름)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Two Options -->
+<section id="options">
+  <div class="fade-in">
+    <div class="section-label">TWO OPTIONS</div>
+    <div class="section-title">두 가지 구성안</div>
+    <div class="section-desc">탭을 전환하여 각 안의 조직도와 상세 구조를 확인하세요.</div>
+  </div>
+
+  <div class="fade-in">
+    <div class="toggle-wrap">
+      <button class="toggle-btn active-a" data-option="optA">A. 스쿼드 체제</button>
+      <button class="toggle-btn" data-option="optB">B. 채널별 체제</button>
+    </div>
+
+    <!-- Option A -->
+    <div class="option-panel active" id="optA">
+      <div class="card" style="border-color:rgba(59,130,246,0.3);">
+        <div class="card-title" style="color:var(--blue);">A안: 스쿼드/프로젝트 단위</div>
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1.5rem;">대표 방향에 맞춰 기능별 스쿼드로 재편. 오프라인 리드 경력직 충원.</p>
+
+        <div class="org-chart">
+          <div class="org-node lead">하성미 <span class="org-role">실장 — 커머스 전체 조망</span></div>
+          <div class="org-indent">
+            <div class="org-node lead">김가영 <span class="org-role">파트장 — 온라인 총괄 + 운영 리드 + 프로젝트</span></div>
+            <div class="org-indent-2">
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <div class="org-node squad-c">엄효진 <span class="org-role">전환</span></div>
+              </div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;">
+                <div class="org-node squad-a">신예지 <span class="org-role">운영(자사몰)</span></div>
+                <div class="org-node squad-a">한승호 <span class="org-role">운영(쿠팡 외)</span></div>
+                <div class="org-node squad-a">이보라 <span class="org-role">운영(N스토어 외)</span></div>
+                <div class="org-node squad-d">구성은 <span class="org-role">운영(오프라인)</span></div>
+                <div class="org-node squad-d">박지윤 <span class="org-role">운영(오프라인)</span></div>
+              </div>
+            </div>
+            <div style="margin-top:0.6rem;">
+              <div class="org-node new-hire">충원 1명 <span class="org-role">오프라인 리드 (경력직)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card" style="border-top:3px solid var(--purple);">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--purple);margin-bottom:0.3rem;">전환 스쿼드</div>
+          <div class="person-name">엄효진 (선임)</div>
+          <div class="person-tasks">
+            <div>공동구매 기획·운영</div>
+            <div>이벤트 기획 + 세팅</div>
+            <div>CRM (카카오/푸시/문자)</div>
+            <div>전환율 실험</div>
+          </div>
+          <div style="margin-top:0.8rem;padding:0.6rem;background:var(--purple-dim);border-radius:8px;font-size:0.8rem;color:var(--purple);">
+            하루종일 "어떻게 팔지"만 고민
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid var(--blue);">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--blue);margin-bottom:0.3rem;">운영 (온·오프라인)</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+            <div><strong>신예지</strong> — 자사몰 S&amp;OP, ERP, 상시세팅, 전산 대응</div>
+            <div><strong>한승호</strong> — 쿠팡 외 매입 채널</div>
+            <div><strong>이보라</strong> — N스토어 외 입점몰</div>
+            <div><strong>구성은</strong> — 롯데백화점, AK 운영</div>
+            <div><strong>박지윤</strong> — 신세계, 현대, 스타필드, 갤러리아 운영</div>
+          </div>
+          <div style="margin-top:0.8rem;padding:0.6rem;background:var(--blue-dim);border-radius:8px;font-size:0.8rem;color:var(--blue);">
+            온·오프라인 채널이 안정적으로 돌아가게 하는 것이 미션
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid var(--warn);">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--warn);margin-bottom:0.3rem;">오프라인 스쿼드</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+            <div><strong style="color:var(--warn);">충원 리드</strong> — 저효율 점포 폐점, 신규 출점, 팝업, 손익 리드</div>
+          </div>
+          <div style="margin-top:0.8rem;padding:0.6rem;background:var(--warn-dim);border-radius:8px;font-size:0.8rem;color:var(--warn);">
+            오프라인 전략·기획 전담
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option B -->
+    <div class="option-panel" id="optB">
+      <div class="card" style="border-color:rgba(249,115,22,0.3);">
+        <div class="card-title" style="color:var(--orange);">B안: 채널별 체제 + 역할 강화</div>
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1.5rem;">현재 구조를 유지하되, 각자의 역할을 명확히 하고 영업지원 사무직 충원으로 현장 부담 경감.</p>
+
+        <div class="org-chart">
+          <div class="org-node lead">하성미 <span class="org-role">실장 — 커머스 전체 조망</span></div>
+          <div class="org-indent">
+            <div class="org-node lead">김가영 <span class="org-role">파트장 — 자사몰+외부몰 관리 + 프로젝트</span></div>
+            <div class="org-indent-2">
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;margin-top:0.3rem;">자사몰</div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <div class="org-node squad-c">엄효진 <span class="org-role">전환·매출</span></div>
+                <div class="org-node squad-b" style="position:relative;">신예지 <span class="org-role">바이럴·<span style="background:var(--orange);color:#fff;padding:0.1rem 0.5rem;border-radius:4px;font-weight:700;font-size:0.65rem;letter-spacing:0.05em;box-shadow:0 0 8px rgba(249,115,22,0.5);animation:glowPulse 2s infinite;">광고 NEW</span></span></div>
+              </div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;margin-top:0.6rem;">외부몰</div>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <div class="org-node squad-a">한승호 <span class="org-role">쿠팡 외 매출</span></div>
+                <div class="org-node squad-a">이보라 <span class="org-role">N스토어 외 매출</span></div>
+              </div>
+            </div>
+            <div style="margin-top:0.6rem;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">오프라인</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <div class="org-node squad-d">구성은 <span class="org-role">현장+매출+손익</span></div>
+              <div class="org-node squad-d">박지윤 <span class="org-role">현장+매출+손익</span></div>
+            </div>
+            <div style="margin-top:0.6rem;">
+              <div class="org-node new-hire">충원 1명 <span class="org-role">영업지원 (사무직)</span></div>
+              <div style="font-size:0.75rem;color:var(--text-muted);padding-left:1rem;margin-top:0.2rem;">
+                ERP, SNOP, 신규 채널 업무 지원 — 온·오프라인 공통 서포트
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card" style="border-top:3px solid var(--purple);">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--purple);margin-bottom:0.3rem;">자사몰</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+            <div><strong>엄효진</strong> — 이벤트, 전환, CRM, 공동구매, 서비스 고도화</div>
+            <div><strong>신예지</strong> — 바이럴, <span class="new-badge">광고 NEW</span> → 자사몰 매출 붐업</div>
+          </div>
+          <div style="margin-top:0.8rem;padding:0.6rem;background:var(--purple-dim);border-radius:8px;font-size:0.8rem;color:var(--purple);">
+            전환(엄효진) + 유입(신예지) 콤비로 자사몰 매출 드라이브
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid var(--blue);">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--blue);margin-bottom:0.3rem;">외부몰</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+            <div><strong>한승호</strong> — 쿠팡 외 채널 매출 붐업 + 운영</div>
+            <div><strong>이보라</strong> — N스토어 외 채널 매출 붐업 + 운영</div>
+          </div>
+          <div style="margin-top:0.8rem;padding:0.6rem;background:var(--blue-dim);border-radius:8px;font-size:0.8rem;color:var(--blue);">
+            각 채널 매출 성장 + 운영 겸임
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid var(--cyan);">
+          <div style="font-size:0.75rem;font-weight:600;color:var(--cyan);margin-bottom:0.3rem;">오프라인</div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+            <div><strong>구성은</strong> — 현장 점검 보강, 매출 드라이브, 손익 개선</div>
+            <div><strong>박지윤</strong> — 현장 점검 보강, 매출 드라이브, 손익 개선</div>
+          </div>
+          <div style="margin-top:0.8rem;padding:0.6rem;background:var(--cyan-dim);border-radius:8px;font-size:0.8rem;color:var(--cyan);">
+            영업지원 충원으로 사무 부담 줄여 현장·매출 집중
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Difference: 신예지 -->
+<section id="people">
+  <div class="fade-in">
+    <div class="section-label">KEY DIFFERENCES</div>
+    <div class="section-title">개인별 역할 변화</div>
+    <div class="section-desc">두 안에서 역할이 달라지는 핵심 인원과, 충원 포지션의 차이를 비교합니다.</div>
+  </div>
+
+  <div class="fade-in">
+    <div class="diff-highlight">
+      <div class="diff-title">BIGGEST DIFFERENCE: 핵심 갈림길</div>
+      <div class="diff-row">
+        <div class="diff-label"></div>
+        <div class="diff-val-a" style="text-align:center;">A안 (스쿼드)</div>
+        <div></div>
+        <div class="diff-val-b" style="text-align:center;">B안 (채널별)</div>
+      </div>
+      <div class="diff-row" style="padding:0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;margin-top:0.5rem;">
+        <div class="diff-label">신예지</div>
+        <div class="diff-val-a">운영 잔류 — SNOP, ERP, 상시세팅, 버그 대응</div>
+        <div class="diff-arrow">vs</div>
+        <div class="diff-val-b">바이럴·광고 로 전환 — 자사몰 매출 붐업</div>
+      </div>
+      <div class="diff-row" style="padding:0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;">
+        <div class="diff-label">충원 1명</div>
+        <div class="diff-val-a">오프라인 리드 (경력직) — 폐점/출점/팝업/손익</div>
+        <div class="diff-arrow">vs</div>
+        <div class="diff-val-b">영업지원 (사무직) — ERP/SNOP/신규채널 지원</div>
+      </div>
+      <div class="diff-row" style="padding:0.8rem;background:rgba(255,255,255,0.03);border-radius:8px;">
+        <div class="diff-label">구성은·박지윤</div>
+        <div class="diff-val-a">리드 아래에서 현장 실행에 집중</div>
+        <div class="diff-arrow">vs</div>
+        <div class="diff-val-b">사무 줄이고 현장+매출+손익 직접 리드</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-in">
+    <div class="section-title" style="font-size:1.2rem;margin-bottom:1rem;">전체 인원 역할 매핑</div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:0.8rem 1rem;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);color:var(--text-muted);font-size:0.75rem;">이름 (직급)</th>
+            <th style="text-align:left;padding:0.8rem 1rem;background:rgba(59,130,246,0.08);border-bottom:1px solid var(--border);color:var(--blue);font-size:0.75rem;">A안: 스쿼드 체제</th>
+            <th style="text-align:left;padding:0.8rem 1rem;background:rgba(249,115,22,0.08);border-bottom:1px solid var(--border);color:var(--orange);font-size:0.75rem;">B안: 채널별 체제</th>
+            <th style="text-align:center;padding:0.8rem 1rem;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);color:var(--text-muted);font-size:0.75rem;">차이</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>하성미</strong> (실장)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">커머스 전체 조망</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">커머스 전체 조망</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);">동일</td>
+          </tr>
+          <tr>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>김가영</strong> (파트장)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">온라인 총괄 + 운영 리드 + 프로젝트</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">자사몰+외부몰 관리 + 프로젝트</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);">유사</td>
+          </tr>
+          <tr>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>김혜리</strong> (파트장)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">해외 전담</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">해외 전담</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);">동일</td>
+          </tr>
+          <tr>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>엄효진</strong> (선임)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">전환 전담 (공동구매/이벤트/CRM)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">자사몰 전환·매출 (이벤트/CRM/공구/고도화)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);">유사</td>
+          </tr>
+          <tr style="background:rgba(245,158,11,0.05);">
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>신예지</strong> (매니저)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);color:var(--blue);">운영 잔류 (SNOP/ERP/상시세팅/버그대응)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);color:var(--orange);"><strong>바이럴·광고</strong> → 자사몰 매출 붐업</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;"><span class="tag tag-red">핵심 차이</span></td>
+          </tr>
+          <tr>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>한승호</strong> (책임)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">운영 — 쿠팡 외 입점몰</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">외부몰 매출 붐업 + 운영</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);">유사</td>
+          </tr>
+          <tr>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>이보라</strong> (매니저)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">운영 — N스토어 외 입점몰</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">외부몰 매출 붐업 + 운영</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;color:var(--text-muted);">유사</td>
+          </tr>
+          <tr style="background:rgba(245,158,11,0.05);">
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>구성은</strong> (책임)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">오프라인 <strong>리드 아래</strong> 매장 운영</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">현장+매출+손익 <strong>직접 리드</strong></td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;"><span class="tag tag-yellow">차이</span></td>
+          </tr>
+          <tr style="background:rgba(245,158,11,0.05);">
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>박지윤</strong> (선임)</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">오프라인 <strong>리드 아래</strong> 매장 운영</td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);">현장+매출+손익 <strong>직접 리드</strong></td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;"><span class="tag tag-yellow">차이</span></td>
+          </tr>
+          <tr style="background:rgba(245,158,11,0.05);">
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);"><strong>충원 1명</strong></td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);color:var(--blue);">오프라인 리드 <span class="tag tag-blue">경력직</span></td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);color:var(--orange);">영업지원 <span class="tag tag-orange">사무직</span></td>
+            <td style="padding:0.8rem 1rem;border-bottom:1px solid var(--border);text-align:center;"><span class="tag tag-red">핵심 차이</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 신예지 Deep Dive -->
+  <div class="fade-in" style="margin-top:2rem;">
+    <div class="grid-2">
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--blue);margin-bottom:0.5rem;">A안에서의 신예지</div>
+        <div class="person-name">운영 잔류</div>
+        <div class="person-tasks" style="margin-top:0.5rem;">
+          <div>SNOP 수량 예측·등록</div>
+          <div>ERP 납품 등록</div>
+          <div>상시 이벤트 세팅 (전환과 무관한)</div>
+          <div>자사몰 버그 대응</div>
+          <div>이벤트 문의 대응</div>
+          <div>배송 휴무 관리</div>
+        </div>
+        <div style="margin-top:0.8rem;padding:0.6rem;background:rgba(59,130,246,0.1);border-radius:8px;font-size:0.8rem;color:var(--text-secondary);">
+          현재 하는 일 그대로 유지. 안정적이나 <strong style="color:var(--blue);">성장 기여 제한적</strong>.
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--orange);">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--orange);margin-bottom:0.5rem;">B안에서의 신예지</div>
+        <div class="person-name">바이럴·광고 로 전환</div>
+        <div class="person-tasks" style="margin-top:0.5rem;">
+          <div>맘카페 바이럴 월간 운영·관리</div>
+          <div>온라인 광고 운영 (메타/네이버 등)</div>
+          <div>엄효진이 만든 이벤트·프로모션 확산</div>
+          <div>자사몰 유입 트래픽 증대</div>
+          <div>콘텐츠 성과 모니터링</div>
+        </div>
+        <div style="margin-top:0.8rem;padding:0.6rem;background:rgba(249,115,22,0.1);border-radius:8px;font-size:0.8rem;color:var(--text-secondary);">
+          엄효진(전환) + 신예지(유입) 콤비로 <strong style="color:var(--orange);">자사몰 매출 직접 드라이브</strong>.
+          <br>단, 기존 운영 업무(SNOP/ERP 등)를 <strong>영업지원 충원이 흡수</strong>해야 가능.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section id="compare">
+  <div class="fade-in">
+    <div class="section-label">COMPARISON</div>
+    <div class="section-title">항목별 비교</div>
+  </div>
+
+  <div class="fade-in" style="overflow-x:auto;">
+    <div class="compare-grid">
+      <div class="cell header row-label">항목</div>
+      <div class="cell header" style="color:var(--blue);">A. 스쿼드 체제</div>
+      <div class="cell header" style="color:var(--orange);">B. 채널별 체제</div>
+
+      <div class="cell row-label">충원 인력</div>
+      <div class="cell">오프라인 리드 <strong>(경력직)</strong></div>
+      <div class="cell">영업지원 <strong>(사무직)</strong></div>
+
+      <div class="cell row-label">채용 난이도</div>
+      <div class="cell" style="color:var(--danger);">높음 (이유식 오프라인 경험자)</div>
+      <div class="cell best">낮음</div>
+
+      <div class="cell row-label">인건비</div>
+      <div class="cell">높음 (책임급 이상)</div>
+      <div class="cell best">낮음 (매니저~선임급)</div>
+
+      <div class="cell row-label">오프라인 전략 역량</div>
+      <div class="cell best">리드가 폐점/출점/손익 전략 주도</div>
+      <div class="cell">구성은·박지윤이 직접 (리드 없음)</div>
+
+      <div class="cell row-label">자사몰 매출 드라이브</div>
+      <div class="cell">엄효진 혼자 (전환만)</div>
+      <div class="cell best">엄효진(전환) + 신예지(유입) 콤비</div>
+
+      <div class="cell row-label">신예지 역할</div>
+      <div class="cell">운영 (SNOP/ERP/버그대응)</div>
+      <div class="cell" style="color:var(--orange);font-weight:600;">바이럴·광고 (매출 기여)</div>
+
+      <div class="cell row-label">온라인 운영 커버</div>
+      <div class="cell best">신예지 전담 (안정적)</div>
+      <div class="cell">영업지원이 흡수 (학습 필요)</div>
+
+      <div class="cell row-label">대표 취지 부합</div>
+      <div class="cell best">스쿼드/프로젝트 단위에 부합</div>
+      <div class="cell">채널별이라 기존 구조와 유사</div>
+
+      <div class="cell row-label">전환 리스크</div>
+      <div class="cell" style="color:var(--danger);">경력직 채용 실패 시 오프라인 공백</div>
+      <div class="cell best">낮음 (점진적 변화)</div>
+
+      <div class="cell row-label">확장성</div>
+      <div class="cell best">오프라인 리드가 전략적 확장 주도</div>
+      <div class="cell">현 인원의 성장에 의존</div>
+
+      <div class="cell row-label">실행 속도</div>
+      <div class="cell">느림 (경력직 채용 시간)</div>
+      <div class="cell best">빠름 (사무직 채용 용이)</div>
+    </div>
+  </div>
+
+  <div class="fade-in" style="margin-top:2rem;">
+    <div class="grid-2">
+      <div class="card" style="border-color:rgba(59,130,246,0.3);">
+        <div class="card-title" style="color:var(--blue);">A안이 유리한 경우</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+          <div>오프라인 채널의 <strong>전략적 판단</strong>이 시급한 경우</div>
+          <div>2027년 폐점/이전/출점이 <strong>동시다발</strong>로 진행될 때</div>
+          <div>구성은·박지윤이 매장 운영에 <strong>매몰되어 전략을 못 보는</strong> 상황</div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(249,115,22,0.3);">
+        <div class="card-title" style="color:var(--orange);">B안이 유리한 경우</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+          <div><strong>자사몰 매출 성장</strong>이 최우선 과제인 경우</div>
+          <div>방문자 16만 명인데 <strong>전환율이 안 올라가는</strong> 상황 해결이 급할 때</div>
+          <div><strong>빠른 실행</strong>이 필요한 경우 (사무직 채용 용이)</div>
+          <div>오프라인은 구성은·박지윤이 <strong>자체적으로 감당 가능</strong>한 경우</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Discussion Points -->
+<section id="discuss">
+  <div class="fade-in">
+    <div class="section-label">DISCUSSION POINTS</div>
+    <div class="section-title">논의 포인트</div>
+    <div class="section-desc">두 안을 결정하기 위해 확인해야 할 핵심 질문들입니다.</div>
+  </div>
+
+  <div class="fade-in">
+    <div class="grid-2">
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <div style="font-size:0.9rem;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Q1. 오프라인 리드가 정말 필요한가?</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+          <div>구성은·박지윤이 전략적 판단(폐점/출점/손익)까지 할 수 있는가?</div>
+          <div>아니면 경력직 리드가 와야 가능한 영역인가?</div>
+          <div style="margin-top:0.5rem;color:var(--text-muted);font-size:0.8rem;">
+            → A안이면 리드 필요, B안이면 사무 줄여서 두 사람이 직접
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <div style="font-size:0.9rem;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Q2. 신예지의 최적 포지션은?</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+          <div>운영(SNOP/ERP)에 묶어두는 것이 맞는가?</div>
+          <div>바이럴/광고 로 전환하면 자사몰 매출에 더 기여할 수 있는가?</div>
+          <div style="margin-top:0.5rem;color:var(--text-muted);font-size:0.8rem;">
+            → 신예지가 빠지면 운영을 영업지원 충원이 흡수해야 함
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--accent);">
+        <div style="font-size:0.9rem;font-weight:700;color:var(--accent);margin-bottom:0.5rem;">Q3. 자사몰 전환율 vs 오프라인 전략, 어디가 더 급한가?</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.9;">
+          <div>자사몰: 방문자 16만 → 매출 박스권. <strong>전환율 제고가 급하다</strong></div>
+          <div>오프라인: 정기식단 마진 29.3%, 하반기 출점 2개. <strong>전략적 판단이 급하다</strong></div>
+          <div style="margin-top:0.5rem;color:var(--text-muted);font-size:0.8rem;">
+            → 자사몰이 급하면 B안(신예지 유입), 오프라인이 급하면 A안(리드 충원)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fade-in" style="margin-top:1.5rem;">
+    <div class="card" style="background:linear-gradient(135deg, var(--bg-card), rgba(34,197,94,0.05)); border-color:var(--border-accent);">
+      <div class="card-title" style="color:var(--accent);">어느 안이든 변하지 않는 것</div>
+      <div class="grid-2" style="margin-top:0.5rem;">
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+          <div>엄효진은 전환 업무에 전담 집중</div>
+          <div>김가영은 온라인 총괄 + 사방넷 프로젝트</div>
+          <div>한승호·이보라는 외부몰 담당 유지</div>
+        </div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+          <div>김혜리는 해외 전담 (별도)</div>
+          <div>1명 충원은 어느 안이든 필요</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer">
+  커머스실 조직 구성안 비교 &middot; 논의 자료 &middot; 2026년 9월
+</div>
+
+<script>
+// Particles
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+for (let i = 0; i < 50; i++) {
+  particles.push({
+    x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+    vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+    r: Math.random()*2+0.5, a: Math.random()*0.25+0.05
+  });
+}
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p => {
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+    if(p.y<0)p.y=canvas.height; if(p.y>canvas.height)p.y=0;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(34,197,94,${p.a})`; ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+
+// Option Toggle
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.toggle-btn').forEach(b => { b.classList.remove('active-a','active-b'); });
+    document.querySelectorAll('.option-panel').forEach(p => p.classList.remove('active'));
+    const opt = btn.dataset.option;
+    btn.classList.add(opt === 'optA' ? 'active-a' : 'active-b');
+    document.getElementById(opt).classList.add('active');
+  });
+});
+
+// Scroll animation
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Nav active
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if(window.scrollY >= s.offsetTop-200) current = s.id; });
+  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href')==='#'+current));
+});
+</script>
+</body>
+</html>
