@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>매장 근무자별 매출 분석 | 클레 직영점</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard','Malgun Gothic',sans-serif;background:#0f172a;color:#e2e8f0;line-height:1.5}
+.header{background:linear-gradient(135deg,#1e293b,#334155);padding:28px 40px;border-bottom:1px solid #334155}
+.header h1{font-size:22px;font-weight:700;color:#f8fafc}
+.header p{color:#94a3b8;margin-top:4px;font-size:13px}
+.container{max-width:1440px;margin:0 auto;padding:20px}
+
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.sc{background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155}
+.sc .lb{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+.sc .vl{font-size:24px;font-weight:700;color:#f8fafc;margin-top:2px}
+.sc .sb{font-size:12px;color:#64748b;margin-top:2px}
+
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:7px 14px;border-radius:7px;border:1px solid #334155;background:#1e293b;color:#94a3b8;cursor:pointer;font-size:12px;transition:all .15s}
+.tab:hover{border-color:#475569;color:#e2e8f0}
+.tab.active{background:#3b82f6;border-color:#3b82f6;color:#fff;font-weight:600}
+
+.section{background:#1e293b;border-radius:10px;padding:20px;margin-bottom:16px;border:1px solid #334155}
+.section h2{font-size:16px;font-weight:600;color:#f8fafc;margin-bottom:12px}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#0f172a;padding:8px 10px;text-align:left;font-weight:600;color:#94a3b8;border-bottom:2px solid #334155;white-space:nowrap;position:sticky;top:0}
+td{padding:8px 10px;border-bottom:1px solid rgba(51,65,85,.5)}
+tr:hover td{background:rgba(51,65,85,.4)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.pos{color:#4ade80;font-weight:600}
+.neg{color:#f87171;font-weight:600}
+.muted{color:#64748b}
+
+.bar-c{display:flex;align-items:center;gap:6px}
+.bar{height:18px;border-radius:3px;min-width:2px;transition:width .3s}
+
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.chart-row{grid-template-columns:1fr}}
+.mc{background:#1e293b;border-radius:10px;padding:16px;border:1px solid #334155}
+.mc h3{font-size:13px;color:#94a3b8;margin-bottom:10px;font-weight:600}
+
+.dow-bar{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.dow-lb{width:28px;font-size:11px;color:#94a3b8;text-align:center}
+.dow-fl{height:20px;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-size:10px;color:#fff;font-weight:500;min-width:2px}
+
+.combo-card{background:#0f172a;border-radius:6px;padding:10px 14px;margin-bottom:6px;border-left:3px solid #3b82f6}
+.combo-w{font-size:12px;font-weight:600;color:#e2e8f0}
+.combo-s{font-size:11px;color:#94a3b8;margin-top:2px}
+
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:700}
+.rank-1{background:#fbbf24;color:#1e293b}.rank-2{background:#94a3b8;color:#1e293b}.rank-3{background:#cd7f32;color:#1e293b}.rank-n{background:#334155;color:#94a3b8}
+
+.role-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.role-mgr{background:rgba(59,130,246,.2);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.role-arb{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
+.role-etc{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.25)}
+
+.comp-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:4px 0}
+.comp-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
+
+.store-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px}
+.store-hd .sn{font-size:18px;font-weight:700;color:#f8fafc}
+.store-hd .sm{font-size:12px;color:#64748b}
+.sm span{margin-left:12px}
+
+.insight-card{background:#0f172a;border-radius:8px;padding:14px 18px;margin-bottom:8px;border:1px solid #334155}
+.insight-card .title{font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:4px}
+.insight-card .body{font-size:12px;color:#94a3b8;line-height:1.6}
+
+.dep-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(51,65,85,.4)}
+.dep-store{width:100px;font-weight:600;font-size:12px;color:#e2e8f0;flex-shrink:0}
+.dep-bar-wrap{flex:1;position:relative;height:28px}
+.dep-bar-bg{position:absolute;left:0;top:0;height:100%;border-radius:4px;opacity:.15}
+.dep-bar-fg{position:absolute;left:0;top:0;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:10px;color:#fff;font-weight:600}
+.dep-val{width:80px;text-align:right;font-size:12px;font-weight:600;flex-shrink:0}
+
+.flag-card{border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.flag-card .flag-icon{font-size:18px;flex-shrink:0;line-height:1.4}
+.flag-card .flag-title{font-size:12px;font-weight:600;color:#f8fafc;margin-bottom:2px}
+.flag-card .flag-body{font-size:11px;color:#94a3b8;line-height:1.5}
+.flag-danger{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25)}
+.flag-warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25)}
+.flag-info{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25)}
+.flag-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap}
+.flag-badge-danger{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.2)}
+.flag-badge-warn{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>매장 근무자별 매출 분석 대시보드</h1>
+  <p>2026년 1~9월 | 요일·공휴일·이벤트 보정 적용 | 롯데 동탄·판교·월계 제외</p>
+</div>
+<div class="container">
+  <div class="summary-grid" id="sg"></div>
+  <div class="tabs" id="mt">
+    <div class="tab active" data-tab="overview">전체 현황</div>
+    <div class="tab" data-tab="role">역할 분석</div>
+    <div class="tab" data-tab="ranking">근무자 랭킹</div>
+  </div>
+  <div class="tabs" id="st" style="margin-top:-8px"></div>
+  <div id="ct"></div>
+</div>
+<script>
+const D={"stores": {"AK광명": {"store_avg": 1232779, "store_avg_adj": 1212013, "total_days": 272, "workers": [{"name": "공진", "role": "ARB", "days": 194, "avg_sales": 1199320, "avg_sales_adj": 1181164, "median_sales": 994670, "std_sales": 888311, "event_days": 74, "weekend_days": 50, "dow_sales": {"0": 1067534, "1": 795515, "2": 891820, "3": 1152641, "4": 1303544, "5": 1604589, "6": 1704550}, "month_sales": {"1": 922846, "2": 1652554, "3": 1492132, "4": 1146053, "5": 1503828, "6": 945636, "7": 961348, "8": 1085000, "9": 1032893}, "diff_pct": -4.2}, {"name": "송성은", "role": "매니저", "days": 191, "avg_sales": 1270506, "avg_sales_adj": 1260530, "median_sales": 1096340, "std_sales": 881178, "event_days": 76, "weekend_days": 56, "dow_sales": {"0": 902192, "1": 847499, "2": 906314, "3": 1401519, "4": 1431277, "5": 1778360, "6": 1554872}, "month_sales": {"1": 874277, "2": 1749914, "3": 1225261, "4": 1078049, "5": 1695390, "6": 1012260, "7": 1426770, "8": 1222832, "9": 1201936}, "diff_pct": 2.3}, {"name": "심유순", "role": "ARB", "days": 159, "avg_sales": 1202883, "avg_sales_adj": 1189964, "median_sales": 977020, "std_sales": 899770, "event_days": 57, "weekend_days": 48, "dow_sales": {"0": 808090, "1": 589794, "2": 998791, "3": 1567045, "4": 1303800, "5": 1626691, "6": 1558023}, "month_sales": {"1": 823774, "2": 1036147, "3": 1452439, "4": 1195222, "5": 1233950, "6": 915462, "7": 1632623, "8": 1231679, "9": 1232165}, "diff_pct": -3.5}], "comp_stats": [{"type": "매니저+ARB", "days": 184, "raw_avg": 1255477, "adj_avg": 1256580, "diff_pct": 3.7}, {"type": "매니저Only", "days": 7, "raw_avg": 1665551, "adj_avg": 1364364, "diff_pct": 12.6}, {"type": "ARB/사원Only", "days": 81, "raw_avg": 1143817, "adj_avg": 1097610, "diff_pct": -9.4}], "combos": [{"workers": "공진, 송성은, 심유순", "days": 13, "avg_sales": 1439484, "avg_adj": 1437836}, {"workers": "송성은", "days": 7, "avg_sales": 1665551, "avg_adj": 1364364}, {"workers": "송성은, 심유순", "days": 68, "avg_sales": 1228193, "avg_adj": 1248814}, {"workers": "공진, 송성은", "days": 103, "avg_sales": 1250265, "avg_adj": 1238830}, {"workers": "공진, 심유순", "days": 75, "avg_sales": 1087417, "avg_adj": 1060548}], "deep": {}, "flags": [{"type": "comp_reversal", "icon": "↕", "title": "매니저+ARB가 매니저Only보다 보정매출 낮음", "body": "매니저+ARB 1,256,580원 < 매니저Only 1,364,364원 (차이 -107,784원) → ARB 동반 시 오히려 매출 감소, 운영 효율 점검 필요", "severity": "warn"}]}, "AK기흥": {"store_avg": 1658048, "store_avg_adj": 1666289, "total_days": 272, "workers": [{"name": "이은영", "role": "ARB", "days": 183, "avg_sales": 1564809, "avg_sales_adj": 1611011, "median_sales": 1318660, "std_sales": 988316, "event_days": 67, "weekend_days": 50, "dow_sales": {"0": 1454186, "1": 1653266, "2": 1446109, "3": 1457222, "4": 1585293, "5": 1599901, "6": 1731762}, "month_sales": {"1": 1159029, "2": 1583533, "3": 1527790, "4": 1415264, "5": 1950696, "6": 1392179, "7": 2239091, "8": 1297806, "9": 1431986}, "diff_pct": -2.8}, {"name": "이정은", "role": "ARB", "days": 172, "avg_sales": 1629170, "avg_sales_adj": 1597379, "median_sales": 1308860, "std_sales": 1115900, "event_days": 65, "weekend_days": 62, "dow_sales": {"0": 1291223, "1": 1725470, "2": 1166502, "3": 2028594, "4": 1546195, "5": 1784361, "6": 1694812}, "month_sales": {"1": 1088535, "2": 1846005, "3": 2172351, "4": 1584242, "5": 1647869, "6": 1401436, "7": 2177018, "8": 1315766, "9": 1501374}, "diff_pct": -3.7}, {"name": "조미경", "role": "매니저", "days": 188, "avg_sales": 1777035, "avg_sales_adj": 1784350, "median_sales": 1452750, "std_sales": 1190606, "event_days": 80, "weekend_days": 41, "dow_sales": {"0": 1388231, "1": 1547996, "2": 1791455, "3": 1936372, "4": 1916315, "5": 1910566, "6": 2602861}, "month_sales": {"1": 1280904, "2": 1995992, "3": 2076839, "4": 1491605, "5": 2052699, "6": 1382417, "7": 2322650, "8": 1365457, "9": 2098817}, "diff_pct": 7.6}], "comp_stats": [{"type": "매니저+ARB", "days": 186, "raw_avg": 1774569, "adj_avg": 1785345, "diff_pct": 7.1}, {"type": "ARB/사원Only", "days": 84, "raw_avg": 1391742, "adj_avg": 1402060, "diff_pct": -15.9}], "combos": [{"workers": "이정은, 조미경", "days": 84, "avg_sales": 1870358, "avg_adj": 1809193}, {"workers": "이은영, 조미경", "days": 98, "avg_sales": 1701620, "avg_adj": 1786715}, {"workers": "이은영, 이정은", "days": 81, "avg_sales": 1400005, "avg_adj": 1416211}], "deep": {}, "flags": [{"type": "high_mgr_dependency", "icon": "⚠", "title": "매니저 의존도 높음 (ARBOnly -15.9%)", "body": "매니저 부재 시 보정매출 1,402,060원으로 매장평균 대비 큰 하락 → 매니저 공백 최소화 또는 ARB 역량 강화 필요", "severity": "danger"}]}, "갤러리아광교": {"store_avg": 2479213, "store_avg_adj": 2402592, "total_days": 263, "workers": [{"name": "강민정", "role": "부매니저", "days": 190, "avg_sales": 2621247, "avg_sales_adj": 2529888, "median_sales": 1939755, "std_sales": 2000777, "event_days": 76, "weekend_days": 58, "dow_sales": {"0": 1803591, "1": 2467403, "2": 2301383, "3": 2487529, "4": 3323225, "5": 2966685, "6": 3064709}, "month_sales": {"1": 1461296, "2": 2943851, "3": 2589277, "4": 2385906, "5": 3308914, "6": 2351448, "7": 3992643, "8": 1698224, "9": 2849311}, "diff_pct": 2.0}, {"name": "유은경", "role": "ARB", "days": 126, "avg_sales": 2289813, "avg_sales_adj": 2236139, "median_sales": 1760772, "std_sales": 1442496, "event_days": 42, "weekend_days": 41, "dow_sales": {"0": 1922582, "1": 1345277, "2": 1735061, "3": 2006371, "4": 2581084, "5": 3044818, "6": 2752602}, "month_sales": {"3": 2075505, "4": 2161188, "5": 2217086, "6": 2315140, "7": 3031659, "8": 1683673, "9": 2533466}, "diff_pct": -9.8}, {"name": "조희신", "role": "매니저", "days": 179, "avg_sales": 2554056, "avg_sales_adj": 2485336, "median_sales": 1817840, "std_sales": 2058290, "event_days": 69, "weekend_days": 49, "dow_sales": {"0": 1832061, "1": 2508385, "2": 1996448, "3": 2706088, "4": 2461092, "5": 2978882, "6": 3632944}, "month_sales": {"1": 1554507, "2": 2976820, "3": 2229076, "4": 2595369, "5": 3292752, "6": 2348188, "7": 3870394, "8": 1808364, "9": 2564211}, "diff_pct": 0.2}], "comp_stats": [{"type": "매니저+ARB", "days": 128, "raw_avg": 2274884, "adj_avg": 2221882, "diff_pct": -7.5}, {"type": "매니저Only", "days": 135, "raw_avg": 2672948, "adj_avg": 2573932, "diff_pct": 7.1}], "combos": [{"workers": "강민정, 조희신", "days": 98, "avg_sales": 2956028, "avg_adj": 2855528}, {"workers": "강민정, 유은경", "days": 60, "avg_sales": 2490731, "avg_adj": 2413266}, {"workers": "강민정, 유은경, 조희신", "days": 5, "avg_sales": 2084192, "avg_adj": 2105822}, {"workers": "유은경, 조희신", "days": 58, "avg_sales": 2130486, "avg_adj": 2089562}, {"workers": "조희신", "days": 13, "avg_sales": 2084993, "avg_adj": 2042423}, {"workers": "강민정", "days": 23, "avg_sales": 1897957, "avg_adj": 1757988}], "deep": {}, "flags": [{"type": "comp_reversal", "icon": "↕", "title": "매니저+ARB가 매니저Only보다 보정매출 낮음", "body": "매니저+ARB 2,221,882원 < 매니저Only 2,573,932원 (차이 -352,050원) → ARB 동반 시 오히려 매출 감소, 운영 효율 점검 필요", "severity": "warn"}]}, "갤러리아센터시티": {"store_avg": 1802013, "store_avg_adj": 1842384, "total_days": 263, "workers": [{"name": "강진영", "role": "ARB", "days": 149, "avg_sales": 1796329, "avg_sales_adj": 1808511, "median_sales": 1647600, "std_sales": 769726, "event_days": 55, "weekend_days": 51, "dow_sales": {"0": 1589941, "1": 1451222, "2": 1630208, "3": 1623602, "4": 2015168, "5": 2146711, "6": 1809941}, "month_sales": {"1": 1432621, "2": 1998646, "3": 1596001, "4": 1869440, "5": 1949636, "6": 1677821, "7": 2147442, "8": 1764814, "9": 1759115}, "diff_pct": 0.4}, {"name": "김륜경", "role": "매니저", "days": 194, "avg_sales": 1881724, "avg_sales_adj": 1893833, "median_sales": 1692250, "std_sales": 857015, "event_days": 76, "weekend_days": 65, "dow_sales": {"0": 1275698, "1": 1526973, "2": 1816087, "3": 1964029, "4": 1956906, "5": 2206556, "6": 2226799}, "month_sales": {"1": 1501226, "2": 2297537, "3": 1740969, "4": 2117340, "5": 1981585, "6": 1538559, "7": 2116019, "8": 1613664, "9": 2088660}, "diff_pct": 5.1}], "comp_stats": [{"type": "매니저+ARB", "days": 80, "raw_avg": 1984725, "adj_avg": 1904060, "diff_pct": 3.3}, {"type": "매니저Only", "days": 114, "raw_avg": 1809442, "adj_avg": 1886657, "diff_pct": 2.4}, {"type": "ARB/사원Only", "days": 69, "raw_avg": 1577898, "adj_avg": 1697729, "diff_pct": -7.9}], "combos": [{"workers": "강진영, 김륜경", "days": 80, "avg_sales": 1984725, "avg_adj": 1904060}, {"workers": "김륜경", "days": 114, "avg_sales": 1809442, "avg_adj": 1886657}, {"workers": "강진영", "days": 69, "avg_sales": 1577898, "avg_adj": 1697729}], "deep": {"mgr_dow": {"0": {"n": 20, "avg": 1213702}, "1": {"n": 16, "avg": 1484508}, "2": {"n": 7, "avg": 2091063}, "3": {"n": 26, "avg": 1895632}, "4": {"n": 18, "avg": 1828412}, "5": {"n": 2, "avg": 3313690}, "6": {"n": 25, "avg": 2191503}}, "arb_dow": {"0": {"n": 12, "avg": 1538988}, "1": {"n": 9, "avg": 1266311}, "2": {"n": 9, "avg": 1389707}, "3": {"n": 9, "avg": 1350358}, "4": {"n": 17, "avg": 1889398}, "5": {"n": 0, "avg": 0}, "6": {"n": 13, "avg": 1709998}}, "mgr_weekend_pct": 23.7, "arb_weekend_pct": 18.8, "fair_items": [{"dow": 2, "event": true, "mgr_avg": 3125845, "arb_avg": 1489933, "mgr_n": 2, "arb_n": 3, "gap": 1635912}, {"dow": 3, "event": true, "mgr_avg": 2195594, "arb_avg": 1383185, "mgr_n": 11, "arb_n": 4, "gap": 812409}, {"dow": 6, "event": true, "mgr_avg": 2738506, "arb_avg": 2012700, "mgr_n": 11, "arb_n": 2, "gap": 725806}, {"dow": 3, "event": false, "mgr_avg": 1675659, "arb_avg": 1324096, "mgr_n": 15, "arb_n": 5, "gap": 351563}, {"dow": 2, "event": false, "mgr_avg": 1677150, "arb_avg": 1339593, "mgr_n": 5, "arb_n": 6, "gap": 337557}, {"dow": 1, "event": false, "mgr_avg": 1329326, "arb_avg": 1101906, "mgr_n": 7, "arb_n": 7, "gap": 227420}, {"dow": 4, "event": false, "mgr_avg": 1783331, "arb_avg": 1591578, "mgr_n": 14, "arb_n": 9, "gap": 191754}, {"dow": 6, "event": false, "mgr_avg": 1761714, "arb_avg": 1654962, "mgr_n": 14, "arb_n": 11, "gap": 106752}, {"dow": 0, "event": true, "mgr_avg": 1631604, "arb_avg": 1757767, "mgr_n": 7, "arb_n": 6, "gap": -126162}, {"dow": 1, "event": true, "mgr_avg": 1605204, "arb_avg": 1841730, "mgr_n": 9, "arb_n": 2, "gap": -236526}, {"dow": 4, "event": true, "mgr_avg": 1986195, "arb_avg": 2224445, "mgr_n": 4, "arb_n": 8, "gap": -238250}, {"dow": 0, "event": false, "mgr_avg": 988677, "arb_avg": 1320210, "mgr_n": 13, "arb_n": 6, "gap": -331533}], "fair_mgr_mean": 1874900, "fair_arb_mean": 1586842, "fair_gap": 288058, "evt_comp": {"normal": {"mgr_avg": 1548667, "arb_avg": 1427760, "mgr_n": 68, "arb_n": 44}, "event": {"mgr_avg": 2194935, "arb_avg": 1842142, "mgr_n": 46, "arb_n": 25}}, "mgr_days": 114, "arb_days": 69}, "flags": []}, "롯데노원": {"store_avg": 2173381, "store_avg_adj": 2121657, "total_days": 261, "workers": [{"name": "김민지", "role": "매니저", "days": 189, "avg_sales": 2360871, "avg_sales_adj": 2208445, "median_sales": 1996460, "std_sales": 1440813, "event_days": 72, "weekend_days": 74, "dow_sales": {"0": 1927840, "1": 1470545, "2": 2520523, "3": 2368184, "4": 2047427, "5": 3135622, "6": 2499586}, "month_sales": {"1": 1553927, "2": 2613579, "3": 2611826, "4": 2277194, "5": 2637633, "6": 2014390, "7": 2716113, "8": 2106157, "9": 2818373}, "diff_pct": 1.6}, {"name": "이윤희", "role": "ARB", "days": 154, "avg_sales": 2147263, "avg_sales_adj": 2126293, "median_sales": 1791710, "std_sales": 1354625, "event_days": 66, "weekend_days": 38, "dow_sales": {"0": 1747856, "1": 1533364, "2": 2705202, "3": 1913234, "4": 1810099, "5": 3194067, "6": 2745663}, "month_sales": {"1": 1452012, "2": 2329010, "3": 2019964, "4": 2174631, "5": 2308554, "6": 1764782, "7": 2628250, "8": 1908098, "9": 2778623}, "diff_pct": -2.2}, {"name": "조미노", "role": "ARB", "days": 162, "avg_sales": 2076251, "avg_sales_adj": 2060626, "median_sales": 1660110, "std_sales": 1260789, "event_days": 60, "weekend_days": 44, "dow_sales": {"0": 1981085, "1": 1061749, "2": 2316858, "3": 1779360, "4": 2078579, "5": 2677716, "6": 2403214}, "month_sales": {"1": 1552263, "2": 2250878, "3": 2316044, "4": 1685978, "5": 2457814, "6": 1564012, "7": 2708844, "8": 1893169, "9": 2152749}, "diff_pct": -5.2}], "comp_stats": [{"type": "매니저+ARB", "days": 189, "raw_avg": 2360871, "adj_avg": 2208445, "diff_pct": 4.1}, {"type": "ARB/사원Only", "days": 72, "raw_avg": 1681219, "adj_avg": 1893839, "diff_pct": -10.7}], "combos": [{"workers": "김민지, 이윤희", "days": 86, "avg_sales": 2496970, "avg_adj": 2294163}, {"workers": "김민지, 조미노", "days": 103, "avg_sales": 2247234, "avg_adj": 2136875}, {"workers": "이윤희, 조미노", "days": 55, "avg_sales": 1814161, "avg_adj": 1954871}, {"workers": "이윤희", "days": 13, "avg_sales": 1243092, "avg_adj": 1741015}], "deep": {}, "flags": []}, "롯데대구": {"store_avg": 2959822, "store_avg_adj": 2916211, "total_days": 261, "workers": [{"name": "김미란", "role": "매니저", "days": 191, "avg_sales": 3074233, "avg_sales_adj": 2958149, "median_sales": 2533220, "std_sales": 1905399, "event_days": 75, "weekend_days": 71, "dow_sales": {"0": 2848852, "1": 2408423, "2": 2865677, "3": 3131120, "4": 3439603, "5": 3422687, "6": 3356993}, "month_sales": {"1": 2398730, "2": 4122433, "3": 2701827, "4": 3209806, "5": 2955347, "6": 2471764, "7": 3832297, "8": 2557477, "9": 3635392}, "diff_pct": -0.1}, {"name": "김소애", "role": "사원", "days": 185, "avg_sales": 2975050, "avg_sales_adj": 2920479, "median_sales": 2426160, "std_sales": 1799545, "event_days": 75, "weekend_days": 55, "dow_sales": {"0": 2327906, "1": 2501403, "2": 3389437, "3": 2483146, "4": 3276972, "5": 3755804, "6": 2802168}, "month_sales": {"1": 2549329, "2": 3533563, "3": 2423551, "4": 3118072, "5": 3223013, "6": 2378317, "7": 3598516, "8": 2542689, "9": 3537175}, "diff_pct": -1.3}, {"name": "양수영", "role": "사원", "days": 171, "avg_sales": 2915895, "avg_sales_adj": 2943168, "median_sales": 2259680, "std_sales": 1999356, "event_days": 71, "weekend_days": 26, "dow_sales": {"0": 2406282, "1": 2334085, "2": 3249748, "3": 2660114, "4": 3113619, "5": 3148196, "6": 4550726}, "month_sales": {"1": 2199892, "2": 4005430, "3": 2765258, "4": 2566936, "5": 2497434, "6": 2325492, "7": 4354010, "8": 2146985, "9": 3428767}, "diff_pct": -0.6}, {"name": "지현미", "role": "ARB", "days": 17, "avg_sales": 2954239, "avg_sales_adj": 3491913, "median_sales": 2491420, "std_sales": 1478410, "event_days": 3, "weekend_days": 4, "dow_sales": {"0": 2147500, "1": 2188380, "2": 3696848, "3": 2877780, "5": 3787600, "6": 2355010}, "month_sales": {"3": 3163875, "7": 3620084, "8": 3207308, "9": 1951470}, "diff_pct": 18.0}], "comp_stats": [{"type": "매니저+ARB", "days": 190, "raw_avg": 3091551, "adj_avg": 2975379, "diff_pct": 2.0}, {"type": "ARB/사원Only", "days": 70, "raw_avg": 2647643, "adj_avg": 2801781, "diff_pct": -3.9}], "combos": [{"workers": "김소애, 지현미", "days": 9, "avg_sales": 3214774, "avg_adj": 3707839}, {"workers": "김미란, 김소애, 양수영", "days": 43, "avg_sales": 3234392, "avg_adj": 3268223}, {"workers": "김미란, 양수영", "days": 67, "avg_sales": 3021597, "avg_adj": 2952851}, {"workers": "김미란, 김소애", "days": 73, "avg_sales": 3128987, "avg_adj": 2826074}, {"workers": "김소애, 양수영", "days": 58, "avg_sales": 2554343, "avg_adj": 2638603}, {"workers": "김미란, 지현미", "days": 5, "avg_sales": 2191620, "avg_adj": 2289787}], "deep": {}, "flags": []}, "롯데대전": {"store_avg": 1211490, "store_avg_adj": 1163897, "total_days": 261, "workers": [{"name": "김희원", "role": "ARB", "days": 108, "avg_sales": 962660, "avg_sales_adj": 1036057, "median_sales": 638385, "std_sales": 876757, "event_days": 44, "weekend_days": 5, "dow_sales": {"0": 951102, "1": 884881, "2": 1034790, "3": 887026, "4": 1220888, "5": 1762535, "6": 862060}, "month_sales": {"1": 561220, "2": 746598, "3": 918338, "4": 879978, "5": 1408136, "6": 654606, "7": 2020802, "8": 765469, "9": 612431}, "diff_pct": -14.5}, {"name": "정용훈", "role": "매니저", "days": 188, "avg_sales": 1375957, "avg_sales_adj": 1262939, "median_sales": 993100, "std_sales": 1095593, "event_days": 76, "weekend_days": 73, "dow_sales": {"0": 1624905, "1": 1065069, "2": 1195400, "3": 1452114, "4": 1542549, "5": 1475549, "6": 1410588}, "month_sales": {"1": 928642, "2": 2043805, "3": 1275921, "4": 1486492, "5": 1330822, "6": 1283694, "7": 1884806, "8": 792128, "9": 1260752}, "diff_pct": 4.2}], "comp_stats": [{"type": "매니저+ARB", "days": 35, "raw_avg": 1327094, "adj_avg": 1301418, "diff_pct": 11.8}, {"type": "매니저Only", "days": 153, "raw_avg": 1387135, "adj_avg": 1254136, "diff_pct": 7.8}, {"type": "ARB/사원Only", "days": 73, "raw_avg": 787931, "adj_avg": 908829, "diff_pct": -21.9}], "combos": [{"workers": "김희원, 정용훈", "days": 35, "avg_sales": 1327094, "avg_adj": 1301418}, {"workers": "정용훈", "days": 153, "avg_sales": 1387135, "avg_adj": 1254136}, {"workers": "김희원", "days": 73, "avg_sales": 787931, "avg_adj": 908829}], "deep": {"mgr_dow": {"0": {"n": 9, "avg": 1300594}, "1": {"n": 15, "avg": 1086753}, "2": {"n": 15, "avg": 1164265}, "3": {"n": 8, "avg": 1431394}, "4": {"n": 33, "avg": 1513135}, "5": {"n": 37, "avg": 1475549}, "6": {"n": 36, "avg": 1410588}}, "arb_dow": {"0": {"n": 21, "avg": 747940}, "1": {"n": 11, "avg": 717883}, "2": {"n": 6, "avg": 501890}, "3": {"n": 26, "avg": 815448}, "4": {"n": 4, "avg": 897810}, "5": {"n": 2, "avg": 1762535}, "6": {"n": 3, "avg": 862060}}, "mgr_weekend_pct": 47.7, "arb_weekend_pct": 6.8, "fair_items": [{"dow": 3, "event": true, "mgr_avg": 1958850, "arb_avg": 790144, "mgr_n": 5, "arb_n": 9, "gap": 1168706}, {"dow": 0, "event": false, "mgr_avg": 1238342, "arb_avg": 448861, "mgr_n": 5, "arb_n": 11, "gap": 789481}, {"dow": 1, "event": true, "mgr_avg": 1861502, "arb_avg": 1204560, "mgr_n": 5, "arb_n": 3, "gap": 656942}, {"dow": 5, "event": true, "mgr_avg": 2232150, "arb_avg": 1762535, "mgr_n": 13, "arb_n": 2, "gap": 469615}, {"dow": 2, "event": false, "mgr_avg": 937141, "arb_avg": 501890, "mgr_n": 9, "arb_n": 6, "gap": 435251}, {"dow": 0, "event": true, "mgr_avg": 1378410, "arb_avg": 1076928, "mgr_n": 4, "arb_n": 10, "gap": 301482}, {"dow": 1, "event": false, "mgr_avg": 699379, "arb_avg": 535379, "mgr_n": 10, "arb_n": 8, "gap": 164000}, {"dow": 6, "event": false, "mgr_avg": 1088880, "arb_avg": 985890, "mgr_n": 23, "arb_n": 2, "gap": 102990}, {"dow": 4, "event": false, "mgr_avg": 815830, "arb_avg": 1008247, "mgr_n": 21, "arb_n": 3, "gap": -192417}, {"dow": 3, "event": false, "mgr_avg": 552300, "arb_avg": 828845, "mgr_n": 3, "arb_n": 17, "gap": -276545}], "fair_mgr_mean": 1276278, "fair_arb_mean": 914328, "fair_gap": 361950, "evt_comp": {"normal": {"mgr_avg": 958218, "arb_avg": 666356, "mgr_n": 95, "arb_n": 47}, "event": {"mgr_avg": 2089672, "arb_avg": 1007701, "mgr_n": 58, "arb_n": 26}}, "mgr_days": 153, "arb_days": 73}, "flags": [{"type": "high_mgr_dependency", "icon": "⚠", "title": "매니저 의존도 높음 (ARBOnly -21.9%)", "body": "매니저 부재 시 보정매출 908,829원으로 매장평균 대비 큰 하락 → 매니저 공백 최소화 또는 ARB 역량 강화 필요", "severity": "danger"}, {"type": "weekend_imbalance", "icon": "📅", "title": "주말 배치 불균형 (매니저 47.7% vs ARB 6.8%)", "body": "주말 배치 차이 41%p → 단순 평균 비교가 불공정하며, 동일 조건 비교(심층 분석)를 참고해야 함", "severity": "info"}]}, "롯데동래": {"store_avg": 1267656, "store_avg_adj": 1228018, "total_days": 260, "workers": [{"name": "우정예", "role": "ARB", "days": 109, "avg_sales": 1492262, "avg_sales_adj": 1314150, "median_sales": 1092700, "std_sales": 1091826, "event_days": 44, "weekend_days": 44, "dow_sales": {"0": 1487500, "1": 1590150, "2": 1459945, "3": 1625450, "4": 1129511, "5": 1902232, "6": 1669634}, "month_sales": {"1": 1107673, "2": 2026934, "3": 1149280, "4": 1247383, "5": 1557761, "6": 945632, "7": 1455374, "8": 1461006, "9": 2157755}, "diff_pct": 3.7}, {"name": "조희진", "role": "매니저", "days": 196, "avg_sales": 1196481, "avg_sales_adj": 1206324, "median_sales": 891140, "std_sales": 955923, "event_days": 78, "weekend_days": 38, "dow_sales": {"0": 932536, "1": 1043678, "2": 1396952, "3": 1069712, "4": 1128231, "5": 1627545, "6": 1392931}, "month_sales": {"1": 755130, "2": 1524704, "3": 1179793, "4": 1262930, "5": 1570138, "6": 1023337, "7": 1366364, "8": 870436, "9": 1270245}, "diff_pct": -4.8}], "comp_stats": [{"type": "매니저+ARB", "days": 45, "raw_avg": 1501691, "adj_avg": 1342160, "diff_pct": 9.3}, {"type": "매니저Only", "days": 151, "raw_avg": 1105524, "adj_avg": 1165843, "diff_pct": -5.1}, {"type": "ARB/사원Only", "days": 64, "raw_avg": 1485632, "adj_avg": 1294456, "diff_pct": 5.4}], "combos": [{"workers": "우정예, 조희진", "days": 45, "avg_sales": 1501691, "avg_adj": 1342160}, {"workers": "우정예", "days": 64, "avg_sales": 1485632, "avg_adj": 1294456}, {"workers": "조희진", "days": 151, "avg_sales": 1105524, "avg_adj": 1165843}], "deep": {"mgr_dow": {"0": {"n": 31, "avg": 932536}, "1": {"n": 36, "avg": 1020588}, "2": {"n": 25, "avg": 1083443}, "3": {"n": 23, "avg": 994011}, "4": {"n": 3, "avg": 1143580}, "5": {"n": 25, "avg": 1457220}, "6": {"n": 8, "avg": 1434344}}, "arb_dow": {"0": {"n": 1, "avg": 1487500}, "1": {"n": 1, "avg": 1305400}, "2": {"n": 10, "avg": 695072}, "3": {"n": 10, "avg": 1673632}, "4": {"n": 3, "avg": 1158513}, "5": {"n": 11, "avg": 1590045}, "6": {"n": 28, "avg": 1701230}}, "mgr_weekend_pct": 21.9, "arb_weekend_pct": 60.9, "fair_items": [{"dow": 4, "event": false, "mgr_avg": 1294570, "arb_avg": 595550, "mgr_n": 2, "arb_n": 2, "gap": 699020}, {"dow": 3, "event": false, "mgr_avg": 744709, "arb_avg": 588024, "mgr_n": 15, "arb_n": 5, "gap": 156685}, {"dow": 2, "event": false, "mgr_avg": 783025, "arb_avg": 682520, "mgr_n": 14, "arb_n": 9, "gap": 100505}, {"dow": 6, "event": false, "mgr_avg": 1230239, "arb_avg": 1194862, "mgr_n": 7, "arb_n": 16, "gap": 35376}, {"dow": 5, "event": false, "mgr_avg": 905413, "arb_avg": 1167062, "mgr_n": 14, "arb_n": 9, "gap": -261649}, {"dow": 3, "event": true, "mgr_avg": 1461451, "arb_avg": 2759240, "mgr_n": 8, "arb_n": 5, "gap": -1297789}, {"dow": 5, "event": true, "mgr_avg": 2159520, "arb_avg": 3493470, "mgr_n": 11, "arb_n": 2, "gap": -1333950}], "fair_mgr_mean": 1225561, "fair_arb_mean": 1497247, "fair_gap": -271686, "evt_comp": {"normal": {"mgr_avg": 844440, "arb_avg": 973055, "mgr_n": 94, "arb_n": 41}, "event": {"mgr_avg": 1536083, "arb_avg": 2399355, "mgr_n": 57, "arb_n": 23}}, "mgr_days": 151, "arb_days": 64}, "flags": [{"type": "arb_over_mgr", "icon": "🔄", "title": "ARB 우정예이(가) 매니저보다 보정매출 높음", "body": "우정예(ARB) 1,314,150원 > 조희진(매니저) 1,206,324원 (차이 +107,826원) → 역할 재검토 필요", "severity": "warn"}, {"type": "weekend_imbalance", "icon": "📅", "title": "주말 배치 불균형 (매니저 21.9% vs ARB 60.9%)", "body": "주말 배치 차이 39%p → 단순 평균 비교가 불공정하며, 동일 조건 비교(심층 분석)를 참고해야 함", "severity": "info"}, {"type": "fair_arb_wins", "icon": "🔍", "title": "동일 조건에서도 ARB가 매니저보다 271,686원 높음", "body": "요일·이벤트를 맞춘 공정 비교에서도 ARB가 우위 → 매니저 역량 점검 또는 역할 재배치 검토", "severity": "warn"}]}, "롯데잠실": {"store_avg": 3748574, "store_avg_adj": 3667318, "total_days": 261, "workers": [{"name": "김금숙", "role": "부매니저", "days": 187, "avg_sales": 3870186, "avg_sales_adj": 3819494, "median_sales": 3164552, "std_sales": 2333310, "event_days": 69, "weekend_days": 55, "dow_sales": {"0": 2939092, "1": 3701732, "2": 3247397, "3": 3275955, "4": 4206830, "5": 5184516, "6": 4415352}, "month_sales": {"1": 2557167, "2": 4978035, "3": 3414866, "4": 3786186, "5": 4182664, "6": 4504438, "7": 4317684, "8": 3365140, "9": 4047884}, "diff_pct": 1.9}, {"name": "안선희", "role": "사원", "days": 165, "avg_sales": 3646280, "avg_sales_adj": 3543775, "median_sales": 2892540, "std_sales": 2149826, "event_days": 67, "weekend_days": 48, "dow_sales": {"0": 2514011, "1": 3272129, "2": 3460535, "3": 3393762, "4": 3070357, "5": 4884894, "6": 4490346}, "month_sales": {"1": 2388001, "2": 4210402, "3": 3690944, "4": 3905657, "5": 3627768, "6": 4093771, "7": 3586512, "8": 3309238, "9": 3904136}, "diff_pct": -5.5}, {"name": "유성숙", "role": "매니저", "days": 186, "avg_sales": 3792070, "avg_sales_adj": 3685710, "median_sales": 3175116, "std_sales": 2243348, "event_days": 74, "weekend_days": 56, "dow_sales": {"0": 2946734, "1": 3816109, "2": 3178046, "3": 3318955, "4": 4034702, "5": 4549092, "6": 4571217}, "month_sales": {"1": 2551438, "2": 4494543, "3": 3893193, "4": 3264452, "5": 4221584, "6": 3879540, "7": 3903878, "8": 3186573, "9": 4990988}, "diff_pct": -1.7}], "comp_stats": [{"type": "매니저+ARB", "days": 168, "raw_avg": 3645667, "adj_avg": 3561612, "diff_pct": -2.9}, {"type": "매니저Only", "days": 93, "raw_avg": 3934470, "adj_avg": 3858272, "diff_pct": 5.2}], "combos": [{"workers": "김금숙, 안선희, 유성숙", "days": 20, "avg_sales": 4540338, "avg_adj": 4425659}, {"workers": "김금숙, 유성숙", "days": 90, "avg_sales": 3942530, "avg_adj": 3863889}, {"workers": "김금숙, 안선희", "days": 69, "avg_sales": 3536520, "avg_adj": 3568631}, {"workers": "안선희, 유성숙", "days": 73, "avg_sales": 3426115, "avg_adj": 3240916}], "deep": {}, "flags": [{"type": "comp_reversal", "icon": "↕", "title": "매니저+ARB가 매니저Only보다 보정매출 낮음", "body": "매니저+ARB 3,561,612원 < 매니저Only 3,858,272원 (차이 -296,660원) → ARB 동반 시 오히려 매출 감소, 운영 효율 점검 필요", "severity": "warn"}]}, "롯데중동": {"store_avg": 2358952, "store_avg_adj": 2361122, "total_days": 261, "workers": [{"name": "구영미", "role": "부매니저", "days": 179, "avg_sales": 2416699, "avg_sales_adj": 2390707, "median_sales": 2067400, "std_sales": 1410404, "event_days": 69, "weekend_days": 62, "dow_sales": {"0": 1903594, "1": 1788258, "2": 2701634, "3": 1880926, "4": 1975568, "5": 3189030, "6": 3049911}, "month_sales": {"1": 1871798, "2": 3001154, "3": 2107754, "4": 2226598, "5": 2845977, "6": 2096498, "7": 2579240, "8": 2301559, "9": 2912385}, "diff_pct": 1.3}, {"name": "민경애", "role": "매니저", "days": 193, "avg_sales": 2476851, "avg_sales_adj": 2455905, "median_sales": 2127540, "std_sales": 1467099, "event_days": 78, "weekend_days": 58, "dow_sales": {"0": 1908928, "1": 1968072, "2": 2496080, "3": 2021354, "4": 2203364, "5": 3305329, "6": 3316179}, "month_sales": {"1": 1935126, "2": 3217353, "3": 2313645, "4": 2488184, "5": 2718119, "6": 2170462, "7": 2535417, "8": 2441116, "9": 2592457}, "diff_pct": 4.1}, {"name": "이현정", "role": "ARB", "days": 164, "avg_sales": 2385921, "avg_sales_adj": 2429510, "median_sales": 2073200, "std_sales": 1369463, "event_days": 63, "weekend_days": 44, "dow_sales": {"0": 1839643, "1": 1899141, "2": 2137867, "3": 2118267, "4": 2448282, "5": 3387337, "6": 3005841}, "month_sales": {"1": 1811192, "2": 3161273, "3": 2284945, "4": 2107966, "5": 2816217, "6": 1735604, "7": 2724308, "8": 2231734, "9": 2433866}, "diff_pct": 3.0}], "comp_stats": [{"type": "매니저+ARB", "days": 164, "raw_avg": 2385921, "adj_avg": 2429510, "diff_pct": 2.9}, {"type": "매니저Only", "days": 97, "raw_avg": 2313354, "adj_avg": 2245498, "diff_pct": -4.9}], "combos": [{"workers": "구영미, 민경애, 이현정", "days": 15, "avg_sales": 4675924, "avg_adj": 4431691}, {"workers": "민경애, 이현정", "days": 81, "avg_sales": 2246824, "avg_adj": 2308109}, {"workers": "구영미, 민경애", "days": 95, "avg_sales": 2338954, "avg_adj": 2262600}, {"workers": "구영미, 이현정", "days": 67, "avg_sales": 2038267, "avg_adj": 2100843}], "deep": {}, "flags": []}, "스타필드명지": {"store_avg": 1607252, "store_avg_adj": 1619313, "total_days": 272, "workers": [{"name": "김미진", "role": "매니저", "days": 180, "avg_sales": 1737637, "avg_sales_adj": 1746466, "median_sales": 1501700, "std_sales": 962097, "event_days": 75, "weekend_days": 46, "dow_sales": {"0": 1504466, "1": 1313426, "2": 1817117, "3": 1846949, "4": 1839402, "5": 2065034, "6": 1923596}, "month_sales": {"1": 1235512, "2": 2201546, "3": 1692301, "4": 2079294, "5": 1638339, "6": 1507750, "7": 2172141, "8": 1439784, "9": 1788741}, "diff_pct": 8.7}, {"name": "이혜경", "role": "ARB", "days": 181, "avg_sales": 1530848, "avg_sales_adj": 1556421, "median_sales": 1388100, "std_sales": 795042, "event_days": 65, "weekend_days": 59, "dow_sales": {"0": 1461220, "1": 1181198, "2": 1302253, "3": 1651129, "4": 1522786, "5": 1756634, "6": 1738886}, "month_sales": {"1": 1182605, "2": 1582563, "3": 1284668, "4": 1600970, "5": 1581011, "6": 1434760, "7": 2014148, "8": 1556365, "9": 1519599}, "diff_pct": -3.2}, {"name": "천유경", "role": "ARB", "days": 185, "avg_sales": 1583017, "avg_sales_adj": 1577449, "median_sales": 1335400, "std_sales": 898183, "event_days": 74, "weekend_days": 51, "dow_sales": {"0": 1334389, "1": 1237454, "2": 1529666, "3": 1878076, "4": 1668100, "5": 1705110, "6": 1790935}, "month_sales": {"1": 1106277, "2": 1768264, "3": 1612537, "4": 1903669, "5": 1653397, "6": 1460487, "7": 1650629, "8": 1355476, "9": 1747672}, "diff_pct": -1.9}], "comp_stats": [{"type": "매니저+ARB", "days": 180, "raw_avg": 1737637, "adj_avg": 1746466, "diff_pct": 7.9}, {"type": "ARB/사원Only", "days": 92, "raw_avg": 1352151, "adj_avg": 1370535, "diff_pct": -15.4}], "combos": [{"workers": "김미진, 천유경", "days": 91, "avg_sales": 1759221, "avg_adj": 1744406}, {"workers": "김미진, 이혜경", "days": 87, "avg_sales": 1658786, "avg_adj": 1708335}, {"workers": "이혜경, 천유경", "days": 92, "avg_sales": 1352151, "avg_adj": 1370535}], "deep": {}, "flags": [{"type": "high_mgr_dependency", "icon": "⚠", "title": "매니저 의존도 높음 (ARBOnly -15.4%)", "body": "매니저 부재 시 보정매출 1,370,535원으로 매장평균 대비 큰 하락 → 매니저 공백 최소화 또는 ARB 역량 강화 필요", "severity": "danger"}]}, "스타필드수원": {"store_avg": 2833965, "store_avg_adj": 2933997, "total_days": 117, "workers": [{"name": "김기쁨", "role": "ARB", "days": 42, "avg_sales": 2906790, "avg_sales_adj": 3066371, "median_sales": 2648605, "std_sales": 957505, "event_days": 19, "weekend_days": 12, "dow_sales": {"0": 2780557, "1": 1955300, "2": 3589075, "3": 2855601, "4": 2327070, "5": 3165890, "6": 3180073}, "month_sales": {"6": 2344177, "7": 2955987, "8": 2779631, "9": 3406890}, "diff_pct": 8.2}, {"name": "김향숙", "role": "매니저", "days": 34, "avg_sales": 2904929, "avg_sales_adj": 2904641, "median_sales": 2699280, "std_sales": 806371, "event_days": 16, "weekend_days": 13, "dow_sales": {"0": 2705278, "1": 2591065, "2": 1775600, "3": 2887280, "4": 2773388, "5": 3164210, "6": 3249066}, "month_sales": {"8": 2766059, "9": 3002138}, "diff_pct": 2.5}, {"name": "신진희", "role": "사원", "days": 39, "avg_sales": 2945430, "avg_sales_adj": 3171940, "median_sales": 2765150, "std_sales": 968203, "event_days": 16, "weekend_days": 7, "dow_sales": {"0": 3246313, "1": 2414270, "2": 2947281, "3": 3255228, "4": 2724697, "5": 3126737, "6": 3360435}, "month_sales": {"8": 2840940, "9": 3055418}, "diff_pct": 11.9}, {"name": "이명희", "role": "매니저", "days": 92, "avg_sales": 2811573, "avg_sales_adj": 2932469, "median_sales": 2651085, "std_sales": 887208, "event_days": 36, "weekend_days": 30, "dow_sales": {"0": 3012844, "1": 2090052, "2": 2750001, "3": 2401984, "4": 2857949, "5": 3418227, "6": 2941306}, "month_sales": {"5": 3352099, "6": 2300514, "7": 3110234, "8": 2673299, "9": 2957287}, "diff_pct": 3.5}], "comp_stats": [{"type": "매니저+ARB", "days": 61, "raw_avg": 2885789, "adj_avg": 3062632, "diff_pct": 4.4}, {"type": "매니저Only", "days": 49, "raw_avg": 2802578, "adj_avg": 2743828, "diff_pct": -6.5}, {"type": "ARB/사원Only", "days": 7, "raw_avg": 2602066, "adj_avg": 3144218, "diff_pct": 7.2}], "combos": [{"workers": "김기쁨, 신진희, 이명희", "days": 5, "avg_sales": 3398984, "avg_adj": 3452553}, {"workers": "신진희, 이명희", "days": 14, "avg_sales": 2699626, "avg_adj": 3285681}, {"workers": "김기쁨, 김향숙, 이명희", "days": 7, "avg_sales": 2617361, "avg_adj": 3249575}, {"workers": "김기쁨, 김향숙, 신진희", "days": 6, "avg_sales": 3198298, "avg_adj": 3001612}, {"workers": "김기쁨, 이명희", "days": 16, "avg_sales": 2784709, "avg_adj": 2940686}, {"workers": "김향숙, 신진희", "days": 10, "avg_sales": 2892925, "avg_adj": 2796144}, {"workers": "김향숙, 이명희", "days": 9, "avg_sales": 2899957, "avg_adj": 2764596}, {"workers": "이명희", "days": 39, "avg_sales": 2772135, "avg_adj": 2728803}], "deep": {}, "flags": [{"type": "arb_over_mgr", "icon": "🔄", "title": "ARB 김기쁨이(가) 매니저보다 보정매출 높음", "body": "김기쁨(ARB) 3,066,371원 > 이명희(매니저) 2,932,469원 (차이 +133,902원) → 역할 재검토 필요", "severity": "warn"}, {"type": "arb_over_mgr", "icon": "🔄", "title": "ARB 신진희이(가) 매니저보다 보정매출 높음", "body": "신진희(사원) 3,171,940원 > 이명희(매니저) 2,932,469원 (차이 +239,471원) → 역할 재검토 필요", "severity": "warn"}]}, "스타필드운정": {"store_avg": 3309860, "store_avg_adj": 3402413, "total_days": 272, "workers": [{"name": "김은경", "role": "매니저", "days": 183, "avg_sales": 3359844, "avg_sales_adj": 3459749, "median_sales": 3195230, "std_sales": 1363865, "event_days": 66, "weekend_days": 54, "dow_sales": {"0": 2495591, "1": 3108657, "2": 2844142, "3": 2918022, "4": 3577301, "5": 4181693, "6": 4129725}, "month_sales": {"1": 2403340, "2": 3222048, "3": 3032015, "4": 2860019, "5": 3630221, "6": 3556145, "7": 3820584, "8": 4016500, "9": 3780994}, "diff_pct": 4.5}, {"name": "유형운", "role": "ARB", "days": 95, "avg_sales": 3623477, "avg_sales_adj": 3751542, "median_sales": 3353280, "std_sales": 1413051, "event_days": 42, "weekend_days": 20, "dow_sales": {"0": 2867422, "1": 3375378, "2": 3407067, "3": 3132029, "4": 3829762, "5": 4849496, "6": 4874696}, "month_sales": {"5": 3777298, "6": 3472710, "7": 3566914, "8": 3557716, "9": 3801490}, "diff_pct": 13.3}, {"name": "이화진", "role": "매니저", "days": 183, "avg_sales": 3300681, "avg_sales_adj": 3323312, "median_sales": 3241960, "std_sales": 1382405, "event_days": 73, "weekend_days": 60, "dow_sales": {"0": 2627785, "1": 2817572, "2": 2596834, "3": 2501201, "4": 3744230, "5": 4145939, "6": 4029523}, "month_sales": {"1": 2229690, "2": 3213547, "3": 3327856, "4": 2898002, "5": 3880333, "6": 3288090, "7": 3381221, "8": 3661316, "9": 3951716}, "diff_pct": 0.4}], "comp_stats": [{"type": "매니저+ARB", "days": 94, "raw_avg": 3618178, "adj_avg": 3751328, "diff_pct": 10.3}, {"type": "매니저Only", "days": 177, "raw_avg": 3141535, "adj_avg": 3215027, "diff_pct": -5.5}], "combos": [{"workers": "김은경, 유형운", "days": 43, "avg_sales": 3882937, "avg_adj": 4152650}, {"workers": "유형운, 이화진", "days": 45, "avg_sales": 3460575, "avg_adj": 3513685}, {"workers": "김은경, 이화진", "days": 89, "avg_sales": 3430327, "avg_adj": 3412028}, {"workers": "이화진", "days": 43, "avg_sales": 2920538, "avg_adj": 3033365}, {"workers": "김은경", "days": 42, "avg_sales": 2704633, "avg_adj": 2922424}, {"workers": "김은경, 유형운, 이화진", "days": 6, "avg_sales": 2902752, "avg_adj": 2657508}], "deep": {}, "flags": [{"type": "arb_over_mgr", "icon": "🔄", "title": "ARB 유형운이(가) 매니저보다 보정매출 높음", "body": "유형운(ARB) 3,751,542원 > 김은경(매니저) 3,459,749원 (차이 +291,793원) → 역할 재검토 필요", "severity": "warn"}]}, "스타필드위례": {"store_avg": 1790271, "store_avg_adj": 1850127, "total_days": 272, "workers": [{"name": "김도희", "role": "사원", "days": 121, "avg_sales": 1873751, "avg_sales_adj": 1911445, "median_sales": 1759300, "std_sales": 807096, "event_days": 47, "weekend_days": 39, "dow_sales": {"0": 1686905, "1": 1651496, "2": 1775543, "3": 1676998, "4": 1998298, "5": 2151709, "6": 2016274}, "month_sales": {"4": 1902854, "5": 2143664, "6": 1851756, "7": 1853396, "8": 1788321, "9": 1686397}, "diff_pct": 6.8}, {"name": "박준혜", "role": "ARB", "days": 188, "avg_sales": 1783892, "avg_sales_adj": 1804708, "median_sales": 1693420, "std_sales": 787786, "event_days": 76, "weekend_days": 61, "dow_sales": {"0": 1535698, "1": 1603843, "2": 1663015, "3": 1525621, "4": 2041766, "5": 2068130, "6": 1965595}, "month_sales": {"1": 1399857, "2": 2101926, "3": 1658730, "4": 1708904, "5": 2245737, "6": 1629082, "7": 1772769, "8": 1651839, "9": 1892674}, "diff_pct": 0.8}, {"name": "서희경", "role": "매니저", "days": 181, "avg_sales": 1772406, "avg_sales_adj": 1899690, "median_sales": 1693040, "std_sales": 857303, "event_days": 65, "weekend_days": 40, "dow_sales": {"0": 1471845, "1": 1512916, "2": 1708192, "3": 1660956, "4": 1971881, "5": 2392948, "6": 1985870}, "month_sales": {"1": 1589636, "2": 2150829, "3": 1608530, "4": 1763889, "5": 2145961, "6": 1638828, "7": 1884566, "8": 1450514, "9": 1783375}, "diff_pct": 6.1}], "comp_stats": [{"type": "매니저+ARB", "days": 154, "raw_avg": 1779919, "adj_avg": 1899268, "diff_pct": 2.7}, {"type": "매니저Only", "days": 27, "raw_avg": 1729550, "adj_avg": 1902097, "diff_pct": 2.8}, {"type": "ARB/사원Only", "days": 91, "raw_avg": 1825804, "adj_avg": 1751545, "diff_pct": -5.3}], "combos": [{"workers": "김도희, 서희경", "days": 56, "avg_sales": 1857479, "avg_adj": 1994671}, {"workers": "서희경", "days": 27, "avg_sales": 1729550, "avg_adj": 1902097}, {"workers": "김도희, 박준혜", "days": 59, "avg_sales": 1938600, "avg_adj": 1867745}, {"workers": "박준혜, 서희경", "days": 93, "avg_sales": 1748670, "avg_adj": 1852586}, {"workers": "김도희, 박준혜, 서희경", "days": 5, "avg_sales": 1492498, "avg_adj": 1699033}, {"workers": "박준혜", "days": 31, "avg_sales": 1642115, "avg_adj": 1558144}], "deep": {"mgr_dow": {"0": {"n": 4, "avg": 1382348}, "1": {"n": 4, "avg": 1483275}, "2": {"n": 0, "avg": 0}, "3": {"n": 8, "avg": 1971268}, "4": {"n": 7, "avg": 1629041}, "5": {"n": 3, "avg": 2204673}, "6": {"n": 1, "avg": 1447900}}, "arb_dow": {"0": {"n": 11, "avg": 1693440}, "1": {"n": 5, "avg": 1830904}, "2": {"n": 15, "avg": 1739301}, "3": {"n": 7, "avg": 1567334}, "4": {"n": 15, "avg": 1877015}, "5": {"n": 17, "avg": 1904863}, "6": {"n": 21, "avg": 1941289}}, "mgr_weekend_pct": 14.8, "arb_weekend_pct": 41.8, "fair_items": [{"dow": 5, "event": false, "mgr_avg": 2340720, "arb_avg": 1702359, "mgr_n": 2, "arb_n": 9, "gap": 638361}, {"dow": 3, "event": true, "mgr_avg": 2567135, "arb_avg": 1956750, "mgr_n": 4, "arb_n": 4, "gap": 610385}, {"dow": 3, "event": false, "mgr_avg": 1375400, "arb_avg": 1048113, "mgr_n": 4, "arb_n": 3, "gap": 327287}, {"dow": 0, "event": false, "mgr_avg": 1517903, "arb_avg": 1539923, "mgr_n": 3, "arb_n": 6, "gap": -22020}, {"dow": 4, "event": false, "mgr_avg": 1512798, "arb_avg": 1589755, "mgr_n": 5, "arb_n": 8, "gap": -76957}, {"dow": 4, "event": true, "mgr_avg": 1919650, "arb_avg": 2205311, "mgr_n": 2, "arb_n": 7, "gap": -285661}, {"dow": 1, "event": true, "mgr_avg": 1069000, "arb_avg": 1969595, "mgr_n": 2, "arb_n": 4, "gap": -900595}], "fair_mgr_mean": 1757515, "fair_arb_mean": 1715972, "fair_gap": 41543, "evt_comp": {"normal": {"mgr_avg": 1620220, "arb_avg": 1594297, "mgr_n": 17, "arb_n": 50}, "event": {"mgr_avg": 1915410, "arb_avg": 2108129, "mgr_n": 10, "arb_n": 41}}, "mgr_days": 27, "arb_days": 91}, "flags": [{"type": "arb_over_mgr", "icon": "🔄", "title": "ARB 김도희이(가) 매니저보다 보정매출 높음", "body": "김도희(사원) 1,911,445원 > 서희경(매니저) 1,899,690원 (차이 +11,755원) → 역할 재검토 필요", "severity": "warn"}, {"type": "comp_reversal", "icon": "↕", "title": "매니저+ARB가 매니저Only보다 보정매출 낮음", "body": "매니저+ARB 1,899,268원 < 매니저Only 1,902,097원 (차이 -2,829원) → ARB 동반 시 오히려 매출 감소, 운영 효율 점검 필요", "severity": "warn"}]}, "신세계강남": {"store_avg": 1785083, "store_avg_adj": 1792467, "total_days": 261, "workers": [{"name": "이미옥", "role": "매니저", "days": 187, "avg_sales": 1881659, "avg_sales_adj": 1859702, "median_sales": 1633340, "std_sales": 1070592, "event_days": 75, "weekend_days": 55, "dow_sales": {"0": 1395101, "1": 1630146, "2": 1576969, "3": 1843557, "4": 1845161, "5": 2383502, "6": 2400666}, "month_sales": {"1": 1546040, "2": 2129842, "3": 1950439, "4": 1944637, "5": 2151577, "6": 1808039, "7": 1588046, "8": 1750453, "9": 2111993}, "diff_pct": 4.2}, {"name": "이정혜", "role": "부매니저", "days": 197, "avg_sales": 1731038, "avg_sales_adj": 1798824, "median_sales": 1506700, "std_sales": 948949, "event_days": 75, "weekend_days": 47, "dow_sales": {"0": 1353268, "1": 1670674, "2": 1410896, "3": 1793916, "4": 1935039, "5": 2040788, "6": 1941364}, "month_sales": {"1": 1402363, "2": 2226256, "3": 1666866, "4": 1808970, "5": 1652795, "6": 1811645, "7": 1632033, "8": 1522435, "9": 1971264}, "diff_pct": 0.8}], "comp_stats": [{"type": "매니저Only", "days": 261, "raw_avg": 1785083, "adj_avg": 1792467, "diff_pct": 0.0}], "combos": [{"workers": "이미옥, 이정혜", "days": 123, "avg_sales": 1845352, "avg_adj": 1904867}, {"workers": "이미옥", "days": 64, "avg_sales": 1951439, "avg_adj": 1772900}, {"workers": "이정혜", "days": 74, "avg_sales": 1541031, "avg_adj": 1622563}], "deep": {}, "flags": []}, "신세계본점": {"store_avg": 1093920, "store_avg_adj": 1110579, "total_days": 261, "workers": [{"name": "김성미", "role": "매니저", "days": 179, "avg_sales": 1136562, "avg_sales_adj": 1178313, "median_sales": 976660, "std_sales": 842850, "event_days": 64, "weekend_days": 48, "dow_sales": {"0": 977818, "1": 922654, "2": 1049289, "3": 1132174, "4": 1106337, "5": 1735342, "6": 1046871}, "month_sales": {"1": 660183, "2": 1385095, "3": 1194542, "4": 1123777, "5": 1329228, "6": 1032494, "7": 1123456, "8": 1052247, "9": 1479421}, "diff_pct": 7.7}, {"name": "이공주", "role": "부매니저", "days": 177, "avg_sales": 1029675, "avg_sales_adj": 1091520, "median_sales": 935460, "std_sales": 686765, "event_days": 67, "weekend_days": 38, "dow_sales": {"0": 1001867, "1": 906164, "2": 1202983, "3": 847867, "4": 961167, "5": 1191552, "6": 1116273}, "month_sales": {"1": 627866, "2": 1008496, "3": 1332678, "4": 1082260, "5": 1246608, "6": 728609, "7": 1177982, "8": 1038710, "9": 988161}, "diff_pct": -0.2}], "comp_stats": [{"type": "매니저Only", "days": 261, "raw_avg": 1093920, "adj_avg": 1110579, "diff_pct": 0.0}], "combos": [{"workers": "김성미, 이공주", "days": 95, "avg_sales": 1054566, "avg_adj": 1202694}, {"workers": "김성미", "days": 84, "avg_sales": 1229295, "avg_adj": 1150740}, {"workers": "이공주", "days": 82, "avg_sales": 1000837, "avg_adj": 962722}], "deep": {}, "flags": []}, "이마트검단": {"store_avg": 1572291, "store_avg_adj": 1625717, "total_days": 141, "workers": [{"name": "김경옥", "role": "ARB", "days": 85, "avg_sales": 1324831, "avg_sales_adj": 1563245, "median_sales": 1192140, "std_sales": 665357, "event_days": 34, "weekend_days": 2, "dow_sales": {"0": 1392662, "1": 1489710, "2": 1017172, "3": 1319572, "4": 1427420, "5": 1959260}, "month_sales": {"5": 1210819, "6": 1269650, "7": 1408963, "8": 1167048, "9": 1518891}, "diff_pct": -0.6}, {"name": "김은하", "role": "매니저", "days": 102, "avg_sales": 1716956, "avg_sales_adj": 1724349, "median_sales": 1459880, "std_sales": 943289, "event_days": 42, "weekend_days": 34, "dow_sales": {"0": 1459518, "1": 1676891, "2": 2310810, "3": 1371395, "4": 1692358, "5": 2095090, "6": 1740944}, "month_sales": {"4": 3199260, "5": 2267519, "6": 1616314, "7": 1651724, "8": 1409328, "9": 1519582}, "diff_pct": 9.7}], "comp_stats": [{"type": "매니저+ARB", "days": 46, "raw_avg": 1435808, "adj_avg": 1728988, "diff_pct": 6.4}, {"type": "매니저Only", "days": 56, "raw_avg": 1947899, "adj_avg": 1720539, "diff_pct": 5.8}, {"type": "ARB/사원Only", "days": 39, "raw_avg": 1193936, "adj_avg": 1367755, "diff_pct": -15.9}], "combos": [{"workers": "김경옥, 김은하", "days": 46, "avg_sales": 1435808, "avg_adj": 1728988}, {"workers": "김은하", "days": 56, "avg_sales": 1947899, "avg_adj": 1720539}, {"workers": "김경옥", "days": 39, "avg_sales": 1193936, "avg_adj": 1367755}], "deep": {"mgr_dow": {"0": {"n": 1, "avg": 3783780}, "1": {"n": 1, "avg": 3230040}, "2": {"n": 0, "avg": 0}, "3": {"n": 1, "avg": 3199260}, "4": {"n": 21, "avg": 1704974}, "5": {"n": 20, "avg": 2108673}, "6": {"n": 12, "avg": 1740944}}, "arb_dow": {"0": {"n": 3, "avg": 1766280}, "1": {"n": 8, "avg": 1379684}, "2": {"n": 18, "avg": 873434}, "3": {"n": 10, "avg": 1450536}, "4": {"n": 0, "avg": 0}, "5": {"n": 0, "avg": 0}, "6": {"n": 0, "avg": 0}}, "mgr_weekend_pct": 57.1, "arb_weekend_pct": 0.0, "fair_items": [], "fair_mgr_mean": 0, "fair_arb_mean": 0, "fair_gap": 0, "evt_comp": {"normal": {"mgr_avg": 1697702, "arb_avg": 1022649, "mgr_n": 32, "arb_n": 23}, "event": {"mgr_avg": 2281495, "arb_avg": 1440161, "mgr_n": 24, "arb_n": 16}}, "mgr_days": 56, "arb_days": 39}, "flags": [{"type": "high_mgr_dependency", "icon": "⚠", "title": "매니저 의존도 높음 (ARBOnly -15.9%)", "body": "매니저 부재 시 보정매출 1,367,755원으로 매장평균 대비 큰 하락 → 매니저 공백 최소화 또는 ARB 역량 강화 필요", "severity": "danger"}, {"type": "weekend_imbalance", "icon": "📅", "title": "주말 배치 불균형 (매니저 57.1% vs ARB 0.0%)", "body": "주말 배치 차이 57%p → 단순 평균 비교가 불공정하며, 동일 조건 비교(심층 분석)를 참고해야 함", "severity": "info"}]}, "현대목동": {"store_avg": 2287691, "store_avg_adj": 2329943, "total_days": 259, "workers": [{"name": "강가림", "role": "매니저", "days": 179, "avg_sales": 2384331, "avg_sales_adj": 2393556, "median_sales": 2198244, "std_sales": 1099998, "event_days": 71, "weekend_days": 56, "dow_sales": {"0": 1784547, "1": 2290840, "2": 2010982, "3": 2103933, "4": 2798957, "5": 2837619, "6": 2531510}, "month_sales": {"1": 1485776, "2": 2707711, "3": 2031395, "4": 2388138, "5": 3058508, "6": 2343402, "7": 2707148, "8": 2139143, "9": 2723674}, "diff_pct": 4.6}, {"name": "김연수", "role": "ARB", "days": 168, "avg_sales": 2232020, "avg_sales_adj": 2306822, "median_sales": 2030565, "std_sales": 1138180, "event_days": 68, "weekend_days": 35, "dow_sales": {"0": 1467718, "1": 2134554, "2": 1819378, "3": 1932372, "4": 2660956, "5": 3206722, "6": 2990053}, "month_sales": {"1": 1427716, "2": 2578309, "3": 1998964, "4": 2048507, "5": 3231165, "6": 2081219, "7": 2889771, "8": 1898205, "9": 2167935}, "diff_pct": 0.8}, {"name": "한가희", "role": "ARB", "days": 35, "avg_sales": 2131223, "avg_sales_adj": 2231919, "median_sales": 1967960, "std_sales": 896048, "event_days": 9, "weekend_days": 15, "dow_sales": {"0": 1165380, "1": 1528356, "2": 2017609, "3": 1987799, "4": 1939806, "5": 2992693, "6": 2531730}, "month_sales": {"8": 2156925, "9": 2087726}, "diff_pct": -2.4}], "comp_stats": [{"type": "매니저+ARB", "days": 105, "raw_avg": 2396563, "adj_avg": 2398757, "diff_pct": 3.0}, {"type": "매니저Only", "days": 76, "raw_avg": 2376298, "adj_avg": 2379257, "diff_pct": 2.1}, {"type": "ARB/사원Only", "days": 78, "raw_avg": 2054799, "adj_avg": 2189261, "diff_pct": -6.0}], "combos": [{"workers": "강가림, 김연수", "days": 86, "avg_sales": 2357481, "avg_adj": 2401803}, {"workers": "강가림", "days": 76, "avg_sales": 2376298, "avg_adj": 2379257}, {"workers": "강가림, 한가희", "days": 14, "avg_sales": 2500390, "avg_adj": 2367049}, {"workers": "김연수", "days": 61, "avg_sales": 2148581, "avg_adj": 2223934}, {"workers": "김연수, 한가희", "days": 17, "avg_sales": 1718288, "avg_adj": 2064845}], "deep": {"mgr_dow": {"0": {"n": 9, "avg": 1852371}, "1": {"n": 10, "avg": 2167846}, "2": {"n": 5, "avg": 2939640}, "3": {"n": 8, "avg": 2226338}, "4": {"n": 11, "avg": 2521380}, "5": {"n": 17, "avg": 2430663}, "6": {"n": 16, "avg": 2542716}}, "arb_dow": {"0": {"n": 13, "avg": 1292011}, "1": {"n": 15, "avg": 1917110}, "2": {"n": 12, "avg": 1927079}, "3": {"n": 10, "avg": 1721487}, "4": {"n": 8, "avg": 1681104}, "5": {"n": 8, "avg": 2892616}, "6": {"n": 12, "avg": 3149331}}, "mgr_weekend_pct": 43.4, "arb_weekend_pct": 25.6, "fair_items": [{"dow": 4, "event": true, "mgr_avg": 3450281, "arb_avg": 1517731, "mgr_n": 4, "arb_n": 2, "gap": 1932550}, {"dow": 2, "event": false, "mgr_avg": 3516463, "arb_avg": 1832723, "mgr_n": 3, "arb_n": 7, "gap": 1683741}, {"dow": 3, "event": true, "mgr_avg": 3138119, "arb_avg": 1749188, "mgr_n": 3, "arb_n": 4, "gap": 1388930}, {"dow": 1, "event": true, "mgr_avg": 3276438, "arb_avg": 1929896, "mgr_n": 3, "arb_n": 5, "gap": 1346542}, {"dow": 0, "event": false, "mgr_avg": 1673368, "arb_avg": 1163456, "mgr_n": 5, "arb_n": 10, "gap": 509911}, {"dow": 0, "event": true, "mgr_avg": 2076126, "arb_avg": 1720528, "mgr_n": 4, "arb_n": 3, "gap": 355598}, {"dow": 4, "event": false, "mgr_avg": 1990579, "arb_avg": 1735562, "mgr_n": 7, "arb_n": 6, "gap": 255017}, {"dow": 2, "event": true, "mgr_avg": 2074405, "arb_avg": 2059177, "mgr_n": 2, "arb_n": 5, "gap": 15228}, {"dow": 3, "event": false, "mgr_avg": 1679269, "arb_avg": 1703019, "mgr_n": 5, "arb_n": 6, "gap": -23750}, {"dow": 5, "event": false, "mgr_avg": 2277485, "arb_avg": 2475248, "mgr_n": 11, "arb_n": 5, "gap": -197764}, {"dow": 6, "event": false, "mgr_avg": 2387593, "arb_avg": 2603282, "mgr_n": 10, "arb_n": 6, "gap": -215688}, {"dow": 1, "event": false, "mgr_avg": 1692735, "arb_avg": 1910717, "mgr_n": 7, "arb_n": 10, "gap": -217982}, {"dow": 5, "event": true, "mgr_avg": 2711491, "arb_avg": 3588230, "mgr_n": 6, "arb_n": 3, "gap": -876739}, {"dow": 6, "event": true, "mgr_avg": 2801255, "arb_avg": 3695380, "mgr_n": 6, "arb_n": 6, "gap": -894125}], "fair_mgr_mean": 2481829, "fair_arb_mean": 2120296, "fair_gap": 361533, "evt_comp": {"normal": {"mgr_avg": 2125501, "arb_avg": 1843964, "mgr_n": 48, "arb_n": 50}, "event": {"mgr_avg": 2806235, "arb_avg": 2431290, "mgr_n": 28, "arb_n": 28}}, "mgr_days": 76, "arb_days": 78}, "flags": []}}, "dow_avg": {"월": 1649335, "화": 1743273, "수": 1881281, "목": 1903753, "금": 2126934, "토": 2573526, "일": 2432795}, "event": {"normal": 1644307, "event": 2691535, "effect_pct": 63.7}, "global_avg": 2052003, "ranking": [{"store": "롯데잠실", "name": "김금숙", "role": "부매니저", "days": 187, "avg_adj": 3819494, "diff_pct": 1.9}, {"store": "스타필드운정", "name": "유형운", "role": "ARB", "days": 95, "avg_adj": 3751542, "diff_pct": 13.3}, {"store": "롯데잠실", "name": "유성숙", "role": "매니저", "days": 186, "avg_adj": 3685710, "diff_pct": -1.7}, {"store": "롯데잠실", "name": "안선희", "role": "사원", "days": 165, "avg_adj": 3543775, "diff_pct": -5.5}, {"store": "스타필드운정", "name": "김은경", "role": "매니저", "days": 183, "avg_adj": 3459749, "diff_pct": 4.5}, {"store": "스타필드운정", "name": "이화진", "role": "매니저", "days": 183, "avg_adj": 3323312, "diff_pct": 0.4}, {"store": "스타필드수원", "name": "신진희", "role": "사원", "days": 39, "avg_adj": 3171940, "diff_pct": 11.9}, {"store": "스타필드수원", "name": "김기쁨", "role": "ARB", "days": 42, "avg_adj": 3066371, "diff_pct": 8.2}, {"store": "롯데대구", "name": "김미란", "role": "매니저", "days": 191, "avg_adj": 2958149, "diff_pct": -0.1}, {"store": "롯데대구", "name": "양수영", "role": "사원", "days": 171, "avg_adj": 2943168, "diff_pct": -0.6}, {"store": "스타필드수원", "name": "이명희", "role": "매니저", "days": 92, "avg_adj": 2932469, "diff_pct": 3.5}, {"store": "롯데대구", "name": "김소애", "role": "사원", "days": 185, "avg_adj": 2920479, "diff_pct": -1.3}, {"store": "스타필드수원", "name": "김향숙", "role": "매니저", "days": 34, "avg_adj": 2904641, "diff_pct": 2.5}, {"store": "갤러리아광교", "name": "강민정", "role": "부매니저", "days": 190, "avg_adj": 2529888, "diff_pct": 2.0}, {"store": "갤러리아광교", "name": "조희신", "role": "매니저", "days": 179, "avg_adj": 2485336, "diff_pct": 0.2}, {"store": "롯데중동", "name": "민경애", "role": "매니저", "days": 193, "avg_adj": 2455905, "diff_pct": 4.1}, {"store": "롯데중동", "name": "이현정", "role": "ARB", "days": 164, "avg_adj": 2429510, "diff_pct": 3.0}, {"store": "현대목동", "name": "강가림", "role": "매니저", "days": 179, "avg_adj": 2393556, "diff_pct": 4.6}, {"store": "롯데중동", "name": "구영미", "role": "부매니저", "days": 179, "avg_adj": 2390707, "diff_pct": 1.3}, {"store": "현대목동", "name": "김연수", "role": "ARB", "days": 168, "avg_adj": 2306822, "diff_pct": 0.8}, {"store": "갤러리아광교", "name": "유은경", "role": "ARB", "days": 126, "avg_adj": 2236139, "diff_pct": -9.8}, {"store": "현대목동", "name": "한가희", "role": "ARB", "days": 35, "avg_adj": 2231919, "diff_pct": -2.4}, {"store": "롯데노원", "name": "김민지", "role": "매니저", "days": 189, "avg_adj": 2208445, "diff_pct": 1.6}, {"store": "롯데노원", "name": "이윤희", "role": "ARB", "days": 154, "avg_adj": 2126293, "diff_pct": -2.2}, {"store": "롯데노원", "name": "조미노", "role": "ARB", "days": 162, "avg_adj": 2060626, "diff_pct": -5.2}, {"store": "스타필드위례", "name": "김도희", "role": "사원", "days": 121, "avg_adj": 1911445, "diff_pct": 6.8}, {"store": "스타필드위례", "name": "서희경", "role": "매니저", "days": 181, "avg_adj": 1899690, "diff_pct": 6.1}, {"store": "갤러리아센터시티", "name": "김륜경", "role": "매니저", "days": 194, "avg_adj": 1893833, "diff_pct": 5.1}, {"store": "신세계강남", "name": "이미옥", "role": "매니저", "days": 187, "avg_adj": 1859702, "diff_pct": 4.2}, {"store": "갤러리아센터시티", "name": "강진영", "role": "ARB", "days": 149, "avg_adj": 1808511, "diff_pct": 0.4}, {"store": "스타필드위례", "name": "박준혜", "role": "ARB", "days": 188, "avg_adj": 1804708, "diff_pct": 0.8}, {"store": "신세계강남", "name": "이정혜", "role": "부매니저", "days": 197, "avg_adj": 1798824, "diff_pct": 0.8}, {"store": "AK기흥", "name": "조미경", "role": "매니저", "days": 188, "avg_adj": 1784350, "diff_pct": 7.6}, {"store": "스타필드명지", "name": "김미진", "role": "매니저", "days": 180, "avg_adj": 1746466, "diff_pct": 8.7}, {"store": "이마트검단", "name": "김은하", "role": "매니저", "days": 102, "avg_adj": 1724349, "diff_pct": 9.7}, {"store": "AK기흥", "name": "이은영", "role": "ARB", "days": 183, "avg_adj": 1611011, "diff_pct": -2.8}, {"store": "AK기흥", "name": "이정은", "role": "ARB", "days": 172, "avg_adj": 1597379, "diff_pct": -3.7}, {"store": "스타필드명지", "name": "천유경", "role": "ARB", "days": 185, "avg_adj": 1577449, "diff_pct": -1.9}, {"store": "이마트검단", "name": "김경옥", "role": "ARB", "days": 85, "avg_adj": 1563245, "diff_pct": -0.6}, {"store": "스타필드명지", "name": "이혜경", "role": "ARB", "days": 181, "avg_adj": 1556421, "diff_pct": -3.2}, {"store": "롯데동래", "name": "우정예", "role": "ARB", "days": 109, "avg_adj": 1314150, "diff_pct": 3.7}, {"store": "롯데대전", "name": "정용훈", "role": "매니저", "days": 188, "avg_adj": 1262939, "diff_pct": 4.2}, {"store": "AK광명", "name": "송성은", "role": "매니저", "days": 191, "avg_adj": 1260530, "diff_pct": 2.3}, {"store": "롯데동래", "name": "조희진", "role": "매니저", "days": 196, "avg_adj": 1206324, "diff_pct": -4.8}, {"store": "AK광명", "name": "심유순", "role": "ARB", "days": 159, "avg_adj": 1189964, "diff_pct": -3.5}, {"store": "AK광명", "name": "공진", "role": "ARB", "days": 194, "avg_adj": 1181164, "diff_pct": -4.2}, {"store": "신세계본점", "name": "김성미", "role": "매니저", "days": 179, "avg_adj": 1178313, "diff_pct": 7.7}, {"store": "신세계본점", "name": "이공주", "role": "부매니저", "days": 177, "avg_adj": 1091520, "diff_pct": -0.2}, {"store": "롯데대전", "name": "김희원", "role": "ARB", "days": 108, "avg_adj": 1036057, "diff_pct": -14.5}], "store_list": ["AK광명", "AK기흥", "갤러리아광교", "갤러리아센터시티", "롯데노원", "롯데대구", "롯데대전", "롯데동래", "롯데잠실", "롯데중동", "스타필드명지", "스타필드수원", "스타필드운정", "스타필드위례", "신세계강남", "신세계본점", "이마트검단", "현대목동"], "mgr_dependency": [{"store": "롯데대전", "mgr_avg": 1254136, "arb_avg": 908829, "gap": 345307, "gap_pct": 38.0, "arb_days": 73}, {"store": "이마트검단", "mgr_avg": 1720539, "arb_avg": 1367755, "gap": 352784, "gap_pct": 25.8, "arb_days": 39}, {"store": "AK광명", "mgr_avg": 1364364, "arb_avg": 1097610, "gap": 266754, "gap_pct": 24.3, "arb_days": 81}, {"store": "갤러리아센터시티", "mgr_avg": 1886657, "arb_avg": 1697729, "gap": 188928, "gap_pct": 11.1, "arb_days": 69}, {"store": "현대목동", "mgr_avg": 2379257, "arb_avg": 2189261, "gap": 189996, "gap_pct": 8.7, "arb_days": 78}, {"store": "스타필드위례", "mgr_avg": 1902097, "arb_avg": 1751545, "gap": 150552, "gap_pct": 8.6, "arb_days": 91}, {"store": "롯데동래", "mgr_avg": 1165843, "arb_avg": 1294456, "gap": -128613, "gap_pct": -9.9, "arb_days": 64}, {"store": "스타필드수원", "mgr_avg": 2743828, "arb_avg": 3144218, "gap": -400390, "gap_pct": -12.7, "arb_days": 7}]};
+const DOW=['월','화','수','목','금','토','일'];
+const fmt=n=>n.toLocaleString()+'원';
+const fmtK=n=>{if(Math.abs(n)>=10000)return(n/10000).toFixed(0)+'만';return n.toLocaleString()};
+const pct=v=>v>=0?`<span class="pos">+${v.toFixed(1)}%</span>`:`<span class="neg">${v.toFixed(1)}%</span>`;
+const roleBadge=r=>r==='매니저'?'<span class="role-badge role-mgr">매니저</span>':r==='부매니저'?'<span class="role-badge role-mgr" style="background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.2)">부매니저</span>':r==='ARB'?'<span class="role-badge role-arb">ARB</span>':r==='사원'?'<span class="role-badge role-arb" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.18)">사원</span>':'<span class="role-badge role-etc">'+r+'</span>';
+function renderFlags(flags){if(!flags||flags.length===0)return'';return'<div style="margin-bottom:16px">'+flags.map(f=>`<div class="flag-card flag-${f.severity}"><div class="flag-icon">${f.icon}</div><div><div class="flag-title">${f.title}</div><div class="flag-body">${f.body}</div></div></div>`).join('')+'</div>'}
+function flagBadges(flags){if(!flags||flags.length===0)return'';return flags.map(f=>{const cls=f.severity==='danger'?'flag-badge-danger':'flag-badge-warn';return`<span class="flag-badge ${cls}">${f.icon} ${f.type==='arb_over_mgr'?'ARB>매니저':f.type==='high_mgr_dependency'?'매니저의존↑':f.type==='weekend_imbalance'?'주말불균형':f.type==='fair_arb_wins'?'공정비교↓':f.type==='comp_reversal'?'구성역전':'특이'}</span>`}).join(' ')}
+
+let curTab='overview',curStore=null;
+
+// Summary
+document.getElementById('sg').innerHTML=`
+<div class="sc"><div class="lb">분석 매장</div><div class="vl">${D.store_list.length}<span style="font-size:13px;color:#64748b">개</span></div></div>
+<div class="sc"><div class="lb">전체 평균 일매출</div><div class="vl" style="color:#38bdf8">${fmt(D.global_avg)}</div></div>
+<div class="sc"><div class="lb">이벤트 효과</div><div class="vl" style="color:#4ade80">+${D.event.effect_pct}%</div><div class="sb">평시 ${fmt(D.event.normal)} → 이벤트 ${fmt(D.event.event)}</div></div>
+<div class="sc"><div class="lb">분석 근무자</div><div class="vl">${D.ranking.length}<span style="font-size:13px;color:#64748b">명</span></div><div class="sb">20일 이상 근무</div></div>
+<div class="sc"><div class="lb">매니저 의존도 최고</div><div class="vl" style="color:#f87171">${D.mgr_dependency.length>0?D.mgr_dependency[0].store:'-'}</div><div class="sb">${D.mgr_dependency.length>0?'매니저Only vs ARBOnly +'+D.mgr_dependency[0].gap_pct+'%':''}</div></div>
+`;
+
+// Tabs
+document.getElementById('mt').onclick=e=>{const t=e.target.dataset.tab;if(!t)return;curTab=t;curStore=null;updTabs();render()};
+function updTabs(){document.querySelectorAll('#mt .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===curTab))}
+function renderST(){
+  const el=document.getElementById('st');
+  el.innerHTML=D.store_list.map(s=>`<div class="tab ${s===curStore?'active':''}" data-store="${s}">${s}</div>`).join('');
+  el.onclick=e=>{const s=e.target.dataset.store;if(!s)return;curStore=s;curTab='store';document.querySelectorAll('#mt .tab').forEach(t=>t.classList.remove('active'));renderST();render()};
+}
+function selStore(s){curStore=s;curTab='store';document.querySelectorAll('#mt .tab').forEach(t=>t.classList.remove('active'));renderST();render()}
+function render(){
+  const el=document.getElementById('ct');
+  if(curTab==='overview')rOverview(el);
+  else if(curTab==='role')rRole(el);
+  else if(curTab==='ranking')rRanking(el);
+  else if(curTab==='store')rStore(el,curStore);
+  renderST();
+}
+
+// ---- OVERVIEW ----
+// Overview sort state
+let ovSort={col:'gap',asc:false}; // default: 격차 큰 순
+
+function getStoreRow(s){
+  const i=D.stores[s],ws=[...i.workers].filter(w=>w.days>=20).sort((a,b)=>b.avg_sales_adj-a.avg_sales_adj);
+  const t=ws[0]||null,b=ws.length>=2?ws[ws.length-1]:null;
+  const gap=t&&b?t.avg_sales_adj-b.avg_sales_adj:0;
+  const arb=i.comp_stats.find(c=>c.type==='ARB/사원Only');
+  const arbPct=arb?arb.diff_pct:-999;
+  return{key:s,avg:i.store_avg,cnt:i.workers.length,top:t,bot:b,gap,arbPct,arbReal:arb?arb.diff_pct:null,flags:i.flags||[]};
+}
+
+function sortStores(rows,col,asc){
+  const m=asc?1:-1;
+  const fn={
+    name:(a,b)=>a.key.localeCompare(b.key)*m,
+    avg:(a,b)=>(a.avg-b.avg)*m,
+    gap:(a,b)=>(a.gap-b.gap)*m,
+    arb:(a,b)=>(a.arbPct-b.arbPct)*m,
+  }[col]||((a,b)=>0);
+  return[...rows].sort(fn);
+}
+
+function rOverview(el){
+  const maxD=Math.max(...Object.values(D.dow_avg));
+  let dB=DOW.map(d=>{const v=D.dow_avg[d]||0;const w=(v/maxD*100).toFixed(0);const c=['토','일'].includes(d)?'#f59e0b':'#3b82f6';return`<div class="dow-bar"><div class="dow-lb">${d}</div><div class="dow-fl" style="width:${w}%;background:${c}">${fmt(v)}</div></div>`}).join('');
+
+  const rawRows=D.store_list.map(getStoreRow);
+  const sorted=sortStores(rawRows,ovSort.col,ovSort.asc);
+
+  const arrow=c=>ovSort.col===c?(ovSort.asc?' ▲':' ▼'):'';
+  const thStyle='cursor:pointer;user-select:none';
+
+  const sRows=sorted.map((r,idx)=>{
+    const {key:s,avg,cnt,top:t,bot:b,gap,arbReal}=r;
+    const rank=idx+1;
+    const gapBar=gap>0?`<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end"><div style="width:${Math.min(gap/8000,100).toFixed(0)}px;height:14px;background:${gap>300000?'#f87171':gap>150000?'#fbbf24':'#4ade80'};border-radius:2px"></div><span>${fmt(gap)}</span></div>`:'<span class="muted">-</span>';
+    return`<tr>
+      <td style="color:#64748b;font-size:11px;text-align:center;width:28px">${rank}</td>
+      <td style="font-weight:600;cursor:pointer;color:#38bdf8" onclick="selStore('${s}')">${s}</td>
+      <td class="num">${fmt(avg)}</td>
+      <td>${t?`${t.name} ${roleBadge(t.role)} <span class="pos">${fmt(t.avg_sales_adj)}</span>`:'-'}</td>
+      <td>${b?`${b.name} ${roleBadge(b.role)} <span class="neg">${fmt(b.avg_sales_adj)}</span>`:'-'}</td>
+      <td class="num" style="font-weight:600">${gapBar}</td>
+      <td class="num">${arbReal!==null?pct(arbReal):'<span class="muted">-</span>'}</td>
+      <td>${flagBadges(r.flags)}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML=`
+  <div class="chart-row">
+    <div class="mc"><h3>요일별 평균 매출</h3>${dB}</div>
+    <div class="mc"><h3>이벤트 기간 효과</h3>
+      <div class="dow-bar"><div class="dow-lb" style="width:40px">평시</div><div class="dow-fl" style="width:${(D.event.normal/D.event.event*100).toFixed(0)}%;background:#475569">${fmt(D.event.normal)}</div></div>
+      <div class="dow-bar"><div class="dow-lb" style="width:40px">이벤트</div><div class="dow-fl" style="width:100%;background:#f59e0b">${fmt(D.event.event)}</div></div>
+      <p style="margin-top:10px;font-size:12px;color:#94a3b8">이벤트 기간 매출이 평시 대비 <span class="pos">+${D.event.effect_pct}%</span></p>
+    </div>
+  </div>
+  <div class="section">
+    <h2>매장별 요약 비교</h2>
+    <p style="color:#64748b;font-size:11px;margin-bottom:10px">컬럼 헤더 클릭으로 정렬 변경 (기본: 격차 큰 순)</p>
+    <div style="overflow-x:auto">
+    <table><tr>
+      <th style="width:28px">#</th>
+      <th style="${thStyle}" onclick="ovSortBy('name')">매장${arrow('name')}</th>
+      <th class="num" style="${thStyle}" onclick="ovSortBy('avg')">평균 일매출${arrow('avg')}</th>
+      <th>보정매출 Top</th>
+      <th>보정매출 Bottom</th>
+      <th class="num" style="${thStyle}" onclick="ovSortBy('gap')">Top-Bot 격차${arrow('gap')}</th>
+      <th class="num" style="${thStyle}" onclick="ovSortBy('arb')">ARBOnly 효과${arrow('arb')}</th>
+      <th>특이점</th>
+    </tr>${sRows}</table>
+    </div>
+  </div>`;
+}
+
+function ovSortBy(col){
+  if(ovSort.col===col)ovSort.asc=!ovSort.asc;
+  else{ovSort.col=col;ovSort.asc=col==='name'?true:false}
+  render();
+}
+
+// ---- ROLE ANALYSIS ----
+function rRole(el){
+  // 매니저 의존도 차트
+  let depChart='';
+  const maxGap=D.mgr_dependency.length>0?Math.max(...D.mgr_dependency.map(d=>d.mgr_avg)):1;
+  D.mgr_dependency.forEach(d=>{
+    const mW=(d.mgr_avg/maxGap*100).toFixed(0);
+    const aW=(d.arb_avg/maxGap*100).toFixed(0);
+    const color=d.gap_pct>20?'#f87171':d.gap_pct>10?'#fbbf24':'#4ade80';
+    depChart+=`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600;cursor:pointer;color:#38bdf8" onclick="selStore('${d.store}')">${d.store}</span>
+        <span style="font-size:12px;font-weight:700;color:${color}">+${d.gap_pct}%</span>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:#60a5fa;width:55px">매니저Only</span>
+        <div style="flex:1;height:20px;background:#1e293b;border-radius:4px;position:relative">
+          <div style="width:${mW}%;height:100%;background:#3b82f6;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;color:#fff">${fmt(d.mgr_avg)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-top:2px">
+        <span style="font-size:10px;color:#fbbf24;width:55px">ARBOnly</span>
+        <div style="flex:1;height:20px;background:#1e293b;border-radius:4px;position:relative">
+          <div style="width:${aW}%;height:100%;background:#f59e0b;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;color:#fff">${fmt(d.arb_avg)}</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-top:2px">ARBOnly ${d.arb_days}일 | 매니저 부재 시 보정매출 ${fmt(d.arb_avg)}</div>
+    </div>`;
+  });
+
+  // 매장별 구성 유형 비교 테이블
+  let compRows='';
+  D.store_list.forEach(s=>{
+    const i=D.stores[s];
+    if(i.comp_stats.length<2)return;
+    i.comp_stats.sort((a,b)=>b.adj_avg-a.adj_avg);
+    const total=i.comp_stats.reduce((a,c)=>a+c.days,0);
+    // stacked bar
+    const segs=i.comp_stats.map(c=>{
+      const w=(c.days/total*100).toFixed(0);
+      const color=c.type==='매니저+ARB'?'#8b5cf6':c.type==='매니저Only'?'#3b82f6':'#f59e0b';
+      return`<div class="comp-seg" style="width:${w}%;background:${color}" title="${c.type}: ${c.days}일">${w>15?c.type:''}</div>`;
+    }).join('');
+
+    compRows+=`<tr>
+      <td style="font-weight:600;cursor:pointer;color:#38bdf8" onclick="selStore('${s}')">${s}</td>
+      <td style="min-width:180px"><div class="comp-bar">${segs}</div></td>`;
+    ['매니저+ARB','매니저Only','ARB/사원Only'].forEach(ct=>{
+      const c=i.comp_stats.find(x=>x.type===ct);
+      compRows+=c?`<td class="num">${c.days}일<br><span style="font-weight:600">${fmt(c.adj_avg)}</span><br>${pct(c.diff_pct)}</td>`:'<td class="num muted">-</td>';
+    });
+    compRows+='</tr>';
+  });
+
+  // 역할별 전체 랭킹
+  const mgrRank=D.ranking.filter(r=>['매니저','부매니저'].includes(r.role)).slice(0,10);
+  const arbRank=[...D.ranking.filter(r=>['ARB','사원'].includes(r.role))].sort((a,b)=>b.avg_adj-a.avg_adj).slice(0,10);
+
+  const mgrRows=mgrRank.map((r,i)=>`<tr><td>${i+1}</td><td style="font-weight:600">${r.name}</td><td style="cursor:pointer;color:#38bdf8" onclick="selStore('${r.store}')">${r.store}</td><td class="num">${r.days}일</td><td class="num" style="font-weight:600">${fmt(r.avg_adj)}</td><td class="num">${pct(r.diff_pct)}</td></tr>`).join('');
+  const arbRows=arbRank.map((r,i)=>`<tr><td>${i+1}</td><td style="font-weight:600">${r.name}</td><td style="cursor:pointer;color:#38bdf8" onclick="selStore('${r.store}')">${r.store}</td><td class="num">${r.days}일</td><td class="num" style="font-weight:600">${fmt(r.avg_adj)}</td><td class="num">${pct(r.diff_pct)}</td></tr>`).join('');
+
+  el.innerHTML=`
+  <div class="section">
+    <h2>매니저 의존도 분석</h2>
+    <p style="color:#64748b;font-size:12px;margin-bottom:16px">매니저Only vs ARB/사원Only 보정매출 비교 — 차이가 클수록 매니저 부재 시 매출 타격이 큼</p>
+    ${depChart}
+  </div>
+
+  <div class="section">
+    <h2>매장별 근무 구성 유형별 보정매출</h2>
+    <p style="color:#64748b;font-size:12px;margin-bottom:12px">
+      <span style="display:inline-block;width:10px;height:10px;background:#8b5cf6;border-radius:2px;margin-right:4px"></span>매니저+ARB
+      <span style="display:inline-block;width:10px;height:10px;background:#3b82f6;border-radius:2px;margin:0 4px 0 12px"></span>매니저Only
+      <span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin:0 4px 0 12px"></span>ARB/사원Only
+    </p>
+    <div style="overflow-x:auto">
+    <table><tr><th>매장</th><th>구성 비율</th><th class="num">매니저+ARB</th><th class="num">매니저Only</th><th class="num">ARB/사원Only</th></tr>${compRows}</table>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="section" style="margin-bottom:0">
+      <h2>매니저 보정매출 Top 10</h2>
+      <table><tr><th>#</th><th>이름</th><th>매장</th><th class="num">근무일</th><th class="num">보정매출</th><th class="num">매장대비</th></tr>${mgrRows}</table>
+    </div>
+    <div class="section" style="margin-bottom:0">
+      <h2>ARB 보정매출 Top 10</h2>
+      <table><tr><th>#</th><th>이름</th><th>매장</th><th class="num">근무일</th><th class="num">보정매출</th><th class="num">매장대비</th></tr>${arbRows}</table>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:16px">
+    <h2>해석 가이드</h2>
+    <div class="insight-card">
+      <div class="title">1. 매니저 의존도가 높은 매장 (ARBOnly -15% 이상)</div>
+      <div class="body">매니저 공백일에 매출 하락이 크므로, 매니저 휴무일 최소화 또는 ARB 역량 강화가 필요합니다.<br>해당 매장: 롯데대전(-21.9%), AK기흥(-15.9%), 이마트검단(-15.9%), 스타필드위례(-15.8%), 스타필드명지(-15.4%)</div>
+    </div>
+    <div class="insight-card">
+      <div class="title">2. 매니저+ARB > 매니저Only인 매장</div>
+      <div class="body">2인 운영이 1인보다 매출이 높은 건 자연스럽지만, 그 <strong>격차 크기</strong>가 핵심입니다.<br>격차가 크면 = 보조 인원의 기여가 실질적 (추가 고객 응대, 진열, 시식 등)</div>
+    </div>
+    <div class="insight-card">
+      <div class="title">3. 동일 역할 내 비교가 공정한 평가</div>
+      <div class="body">매니저끼리, ARB끼리 비교해야 근무 조건(주말/이벤트 배치 비율)이 유사합니다.<br>각 매장 상세 페이지에서 역할별 그룹 비교를 확인하세요.</div>
+    </div>
+    <div class="insight-card">
+      <div class="title">4. 예외 케이스 주목</div>
+      <div class="body">ARB가 매니저보다 높은 경우 → 역할 재검토 필요 (예: 롯데동래 우정예 ARB, 스타필드운정 유형운 ARB)<br>근무일 30일 미만은 통계적 신뢰도가 낮으므로 참고용으로만 활용하세요.</div>
+    </div>
+  </div>`;
+}
+
+// ---- RANKING ----
+function rRanking(el){
+  const rows=D.ranking.map((r,i)=>{
+    const rank=i+1;
+    const badge=rank<=3?`<span class="rank-badge rank-${rank}">${rank}</span>`:`<span class="rank-badge rank-n">${rank}</span>`;
+    return`<tr><td>${badge}</td><td style="font-weight:600">${r.name}</td><td>${roleBadge(r.role)}</td><td style="cursor:pointer;color:#38bdf8" onclick="selStore('${r.store}')">${r.store}</td><td class="num">${r.days}일</td><td class="num" style="font-weight:600">${fmt(r.avg_adj)}</td><td class="num">${pct(r.diff_pct)}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<div class="section"><h2>전체 근무자 보정매출 랭킹 (20일 이상)</h2><p style="color:#64748b;font-size:12px;margin-bottom:12px">보정매출 = 요일·이벤트·공휴일 효과를 제거한 표준화 매출</p><div style="overflow-x:auto"><table><tr><th>#</th><th>이름</th><th>역할</th><th>매장</th><th class="num">근무일</th><th class="num">보정매출</th><th class="num">매장대비</th></tr>${rows}</table></div></div>`;
+}
+
+// ---- STORE DETAIL ----
+function rStore(el,sk){
+  const i=D.stores[sk];if(!i)return;
+  const ws=[...i.workers].sort((a,b)=>b.avg_sales_adj-a.avg_sales_adj);
+  const maxAdj=Math.max(...ws.map(w=>w.avg_sales_adj));
+
+  // 역할별 그룹
+  const mgrs=ws.filter(w=>['매니저','부매니저'].includes(w.role));
+  const arbs=ws.filter(w=>!['매니저','부매니저'].includes(w.role));
+
+  const wRows=ws.map(w=>{
+    const bW=(w.avg_sales_adj/maxAdj*100).toFixed(0);
+    const c=w.diff_pct>=0?'#3b82f6':'#64748b';
+    return`<tr>
+      <td style="font-weight:600">${w.name}</td>
+      <td>${roleBadge(w.role)}</td>
+      <td class="num">${w.days}일</td>
+      <td class="num">${fmt(w.avg_sales)}</td>
+      <td class="num" style="font-weight:600">${fmt(w.avg_sales_adj)}</td>
+      <td style="min-width:180px"><div class="bar-c"><div class="bar" style="width:${bW}%;background:${c}"></div><span style="font-size:11px">${pct(w.diff_pct)}</span></div></td>
+      <td class="num">${fmt(w.median_sales)}</td>
+      <td class="num">${w.event_days}일</td>
+      <td class="num">${w.weekend_days}일</td>
+    </tr>`;
+  }).join('');
+
+  // 구성 유형 분석
+  let compHtml='';
+  if(i.comp_stats.length>=2){
+    const maxCA=Math.max(...i.comp_stats.map(c=>c.adj_avg));
+    compHtml=i.comp_stats.map(c=>{
+      const w=(c.adj_avg/maxCA*100).toFixed(0);
+      const color=c.type==='매니저+ARB'?'#8b5cf6':c.type==='매니저Only'?'#3b82f6':'#f59e0b';
+      return`<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="font-weight:600;color:${color}">${c.type}</span>
+          <span>${c.days}일 | ${pct(c.diff_pct)}</span>
+        </div>
+        <div style="height:24px;background:#0f172a;border-radius:4px;overflow:hidden">
+          <div style="width:${w}%;height:100%;background:${color};border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;color:#fff;font-weight:600">${fmt(c.adj_avg)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // 역할별 비교 섹션
+  let roleCompare='';
+  if(mgrs.length>0&&arbs.length>0){
+    const mAvg=mgrs.reduce((a,w)=>a+w.avg_sales_adj*w.days,0)/mgrs.reduce((a,w)=>a+w.days,0);
+    const aAvg=arbs.reduce((a,w)=>a+w.avg_sales_adj*w.days,0)/arbs.reduce((a,w)=>a+w.days,0);
+    const gap=mAvg-aAvg;
+    roleCompare=`<div class="insight-card" style="margin-top:12px">
+      <div class="title">역할별 평균 비교</div>
+      <div class="body">
+        <span class="role-badge role-mgr">매니저</span> 가중평균 보정매출 <strong>${fmt(Math.round(mAvg))}</strong> (${mgrs.map(w=>w.name).join(', ')})<br>
+        <span class="role-badge role-arb">ARB</span> 가중평균 보정매출 <strong>${fmt(Math.round(aAvg))}</strong> (${arbs.map(w=>w.name).join(', ')})<br>
+        매니저-ARB 격차: <strong style="color:${gap>0?'#4ade80':'#f87171'}">${fmt(Math.round(Math.abs(gap)))}</strong> ${gap>0?'(매니저가 높음)':'(ARB가 높음 — 역할 재검토 필요)'}
+      </div>
+    </div>`;
+  }
+
+  // DOW
+  const colors=['#3b82f6','#f59e0b','#10b981','#f472b6','#a78bfa','#fb923c','#38bdf8','#4ade80'];
+  let dowC='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">'+DOW.map(d=>`<div style="font-size:11px;color:#94a3b8;padding:3px">${d}</div>`).join('')+'</div>';
+  ws.forEach((w,wi)=>{
+    dowC+=`<div style="margin-bottom:2px"><span style="font-size:10px;color:${colors[wi%colors.length]};font-weight:600">${w.name} <span style="color:#64748b">${w.role}</span></span><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
+    DOW.forEach((_,di)=>{const v=w.dow_sales[di]||0;const h=maxAdj>0?Math.max(3,v/maxAdj*50):3;dowC+=`<div style="text-align:center"><div style="height:${h}px;background:${colors[wi%colors.length]};border-radius:2px;margin:0 auto;width:80%;opacity:.8" title="${fmt(v)}"></div><div style="font-size:9px;color:#64748b;margin-top:1px">${fmtK(v)}</div></div>`});
+    dowC+='</div></div>';
+  });
+
+  // Month
+  let mC='<div style="overflow-x:auto"><table style="font-size:11px"><tr><th>근무자</th><th>역할</th>';
+  for(let m=1;m<=9;m++)mC+=`<th class="num">${m}월</th>`;
+  mC+='</tr>';
+  ws.forEach((w,wi)=>{
+    mC+=`<tr><td style="color:${colors[wi%colors.length]};font-weight:600">${w.name}</td><td>${roleBadge(w.role)}</td>`;
+    for(let m=1;m<=9;m++){const v=w.month_sales[m];mC+=v?`<td class="num">${fmt(v)}</td>`:'<td class="num muted">-</td>'}
+    mC+='</tr>';
+  });
+  mC+='</table></div>';
+
+  // Combos
+  const combos=i.combos.map(c=>`<div class="combo-card"><div class="combo-w">${c.workers}</div><div class="combo-s">${c.days}일 | 평균 ${fmt(c.avg_sales)} | 보정 <strong>${fmt(c.avg_adj)}</strong></div></div>`).join('');
+
+  // ---- 심층 분석 (매니저Only vs ARBOnly 비교) ----
+  let deepHtml='';
+  const dp=i.deep;
+  if(dp && dp.fair_items && dp.fair_items.length>0){
+    // 1) 요일 배치 비교
+    const maxDN=Math.max(...[...Object.values(dp.mgr_dow),...Object.values(dp.arb_dow)].map(x=>x.n));
+    let dowDist='<div style="display:grid;grid-template-columns:40px 1fr 1fr;gap:4px;align-items:center;margin-bottom:4px"><div></div><div style="font-size:10px;color:#3b82f6;font-weight:600;text-align:center">매니저Only (${dp.mgr_days}일)</div><div style="font-size:10px;color:#f59e0b;font-weight:600;text-align:center">ARB/사원Only (${dp.arb_days}일)</div></div>';
+    DOW.forEach((_,di)=>{
+      const md=dp.mgr_dow[di]||{n:0,avg:0};
+      const ad=dp.arb_dow[di]||{n:0,avg:0};
+      const mW=maxDN>0?(md.n/maxDN*100).toFixed(0):0;
+      const aW=maxDN>0?(ad.n/maxDN*100).toFixed(0):0;
+      dowDist+=`<div style="display:grid;grid-template-columns:40px 1fr 1fr;gap:4px;align-items:center;margin-bottom:2px">
+        <div style="font-size:11px;color:#94a3b8;text-align:center">${DOW[di]}</div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:${mW}%;height:16px;background:#3b82f6;border-radius:2px;min-width:1px"></div><span style="font-size:9px;color:#64748b">${md.n}일</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:${aW}%;height:16px;background:#f59e0b;border-radius:2px;min-width:1px"></div><span style="font-size:9px;color:#64748b">${ad.n}일</span></div>
+      </div>`;
+    });
+    dowDist+=`<div style="margin-top:8px;font-size:11px;color:#94a3b8">주말 비율: <span style="color:#3b82f6;font-weight:600">매니저 ${dp.mgr_weekend_pct}%</span> vs <span style="color:#f59e0b;font-weight:600">ARB ${dp.arb_weekend_pct}%</span></div>`;
+
+    // 2) 동일 조건 공정 비교
+    const maxGap=Math.max(...dp.fair_items.map(f=>Math.abs(f.gap)));
+    let fairRows=dp.fair_items.map(f=>{
+      const label=DOW[f.dow]+(f.event?' 이벤트':' 평시');
+      const gapW=maxGap>0?(Math.abs(f.gap)/maxGap*80).toFixed(0):0;
+      const gapColor=f.gap>0?'#3b82f6':'#f59e0b';
+      return`<tr>
+        <td style="font-size:11px">${label}</td>
+        <td class="num" style="font-size:11px">${fmt(f.mgr_avg)} <span class="muted">(${f.mgr_n})</span></td>
+        <td class="num" style="font-size:11px">${fmt(f.arb_avg)} <span class="muted">(${f.arb_n})</span></td>
+        <td style="min-width:120px"><div class="bar-c"><div class="bar" style="width:${gapW}%;background:${gapColor};height:14px"></div><span style="font-size:10px;color:${gapColor};font-weight:600">${f.gap>0?'+':''}${fmtK(f.gap)}</span></div></td>
+      </tr>`;
+    }).join('');
+
+    const fairGapColor=dp.fair_gap>0?'#3b82f6':'#f59e0b';
+    const fairWho=dp.fair_gap>0?'매니저':'ARB';
+
+    // 3) 이벤트 기간 분리 비교
+    let evtHtml='';
+    if(dp.evt_comp.normal&&dp.evt_comp.event){
+      const n=dp.evt_comp.normal, e=dp.evt_comp.event;
+      const nGap=n.mgr_avg-n.arb_avg, eGap=e.mgr_avg-e.arb_avg;
+      evtHtml=`<div style="margin-top:12px;padding:12px;background:#0f172a;border-radius:6px">
+        <div style="font-size:12px;font-weight:600;color:#e2e8f0;margin-bottom:8px">이벤트/평시별 격차</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px">
+          <div>
+            <div style="color:#94a3b8;margin-bottom:4px">평시</div>
+            <div>매니저 <strong>${fmt(n.mgr_avg)}</strong> (${n.mgr_n}일)</div>
+            <div>ARB <strong>${fmt(n.arb_avg)}</strong> (${n.arb_n}일)</div>
+            <div style="font-weight:600;color:${nGap>0?'#3b82f6':'#f59e0b'};margin-top:2px">차이: ${nGap>0?'+':''}${fmt(Math.abs(nGap))}</div>
+          </div>
+          <div>
+            <div style="color:#94a3b8;margin-bottom:4px">이벤트</div>
+            <div>매니저 <strong>${fmt(e.mgr_avg)}</strong> (${e.mgr_n}일)</div>
+            <div>ARB <strong>${fmt(e.arb_avg)}</strong> (${e.arb_n}일)</div>
+            <div style="font-weight:600;color:${eGap>0?'#3b82f6':'#f59e0b'};margin-top:2px">차이: ${eGap>0?'+':''}${fmt(Math.abs(eGap))}</div>
+          </div>
+        </div>
+        ${Math.abs(eGap)>Math.abs(nGap)*1.5?'<div style="margin-top:8px;font-size:11px;color:#f87171;font-weight:600">⚠ 이벤트 기간에 격차가 더 크게 벌어짐</div>':''}
+      </div>`;
+    }
+
+    // 4) 핵심 인사이트
+    const wkendGap=Math.abs(dp.mgr_weekend_pct-dp.arb_weekend_pct);
+    let insights=[];
+    if(wkendGap>20) insights.push(`요일 배치 차이가 큼: 매니저 주말 ${dp.mgr_weekend_pct}% vs ARB ${dp.arb_weekend_pct}% → 단순 평균 비교는 불공정`);
+    if(dp.fair_gap>0) insights.push(`동일 조건에서도 매니저가 ${fmt(dp.fair_gap)} 높음 → 순수 역량 차이 존재`);
+    else insights.push(`동일 조건에서 ARB가 ${fmt(Math.abs(dp.fair_gap))} 높음 → 역할 재검토 필요`);
+    if(dp.evt_comp.event&&dp.evt_comp.normal){
+      const eG=dp.evt_comp.event.mgr_avg-dp.evt_comp.event.arb_avg;
+      const nG=dp.evt_comp.normal.mgr_avg-dp.evt_comp.normal.arb_avg;
+      if(Math.abs(eG)>Math.abs(nG)*1.5) insights.push('이벤트 기간에 격차가 평시보다 크게 확대 → 이벤트 대응력 차이');
+    }
+
+    deepHtml=`
+    <div class="section">
+      <h2>매니저Only vs ARBOnly 심층 비교</h2>
+      <p style="color:#64748b;font-size:11px;margin-bottom:16px">매니저만 근무한 날 vs ARB/사원만 근무한 날의 매출을 요일·이벤트 조건별로 분해 비교</p>
+      <div class="chart-row" style="margin-bottom:0">
+        <div>
+          <h3 style="font-size:13px;color:#94a3b8;margin-bottom:8px">요일별 근무 배치</h3>
+          ${dowDist}
+        </div>
+        <div>
+          <h3 style="font-size:13px;color:#94a3b8;margin-bottom:8px">동일 조건 공정 비교</h3>
+          <div style="overflow-x:auto">
+          <table style="font-size:11px"><tr><th>조건</th><th class="num">매니저Only</th><th class="num">ARBOnly</th><th>격차</th></tr>${fairRows}</table>
+          </div>
+          <div style="margin-top:8px;padding:8px 12px;background:#0f172a;border-radius:6px;font-size:12px">
+            동일조건 평균: 매니저 <strong style="color:#3b82f6">${fmt(dp.fair_mgr_mean)}</strong> vs ARB <strong style="color:#f59e0b">${fmt(dp.fair_arb_mean)}</strong>
+            → <strong style="color:${fairGapColor}">${fairWho}가 ${fmt(Math.abs(dp.fair_gap))} 높음</strong>
+          </div>
+          ${evtHtml}
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        ${insights.map(t=>'<div class="insight-card" style="margin-bottom:6px"><div class="body" style="font-size:12px">'+t+'</div></div>').join('')}
+      </div>
+    </div>`;
+  }
+
+  const flagsHtml=renderFlags(i.flags);
+  el.innerHTML=`
+  <div class="section">
+    <div class="store-hd">
+      <div class="sn">${sk}</div>
+      <div class="sm">평균 일매출 <strong style="color:#38bdf8">${fmt(i.store_avg)}</strong><span>보정평균 <strong>${fmt(i.store_avg_adj)}</strong></span><span>${i.total_days}일</span><span>${i.workers.length}명</span></div>
+    </div>
+    ${flagsHtml}
+    <div style="overflow-x:auto">
+    <table><tr><th>근무자</th><th>역할</th><th class="num">근무일</th><th class="num">평균매출</th><th class="num">보정매출</th><th>매장평균 대비</th><th class="num">중앙값</th><th class="num">이벤트</th><th class="num">주말</th></tr>${wRows}</table>
+    </div>
+    ${roleCompare}
+  </div>
+
+  <div class="chart-row">
+    <div class="mc"><h3>근무 구성 유형별 보정매출</h3>${compHtml||'<p class="muted" style="font-size:12px">구성 유형이 1가지뿐이라 비교 불가</p>'}</div>
+    <div class="mc"><h3>근무자별 요일 매출</h3>${dowC}</div>
+  </div>
+
+  ${deepHtml}
+
+  <div class="chart-row">
+    <div class="mc"><h3>근무자별 월별 평균 매출</h3>${mC}</div>
+    <div class="mc"><h3>근무자 조합별 매출 (5일 이상)</h3><p style="font-size:11px;color:#64748b;margin-bottom:8px">같은 날 함께 근무한 조합별 보정매출</p>${combos}</div>
+  </div>`;
+}
+
+renderST();render();
+</script>
+</body>
+</html>
